@@ -1,0 +1,5 @@
+import '../styles/style.css'
+// import '../src/app.js'
+import '../src/eromaniac.js'
+import '../src/createCategoriesObjects.js'
+import '../src/firebaseConfig.js'
