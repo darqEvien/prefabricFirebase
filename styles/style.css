@@ -165,9 +165,13 @@ body {
   padding: 10px;
   margin-bottom: 1rem;
   border-radius: 2%;
-  height: auto;
+  /* height: auto; */
+  height: 21.5rem;
 }
-
+.ero__ort{
+  min-height: 200px;
+  
+}
 .focus-item.selected {
   border-color: gold;
 }
@@ -213,7 +217,7 @@ body {
 
 .product__img {
   border-radius: 5%;
-
+  min-height: 8rem;
 }
 
 #veranda__container {
@@ -228,6 +232,7 @@ body {
 .title__ort {
   height: 4.2rem;
   text-align: center;
+
 }
 
 .content__ort {

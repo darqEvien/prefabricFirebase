@@ -14,8 +14,12 @@
   "main": "main.js",
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "lol",
   "dependencies": {
     "firebase": "^10.13.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "lol"
   }
 }

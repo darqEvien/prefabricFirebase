@@ -15,16 +15,17 @@ async function getCategories() {
   }));
 }
 
-async function getCategoriesTitles() {
-  try {
-    const categoriesSnapshot = await getDocs(collection(db, "categories"));
-    const categoriesTitles = categoriesSnapshot.docs.map(doc => doc.data().title);
-    return categoriesTitles;  // Title'ları döndürüyoruz
-  } catch (error) {
-    console.error("Kategorilerden veriler alınırken hata oluştu:", error);
-    return [];
-  }
-}
+ async function getCategoriesTitles(categoryName) {
+   try {
+     const categoriesSnapshot = await getDocs(collection(db, "categories"));
+     const categoriesTitles = categoriesSnapshot.docs.map(doc => doc.data().title);
+     return categoriesTitles;  // Title'ları döndürüyoruz
+   } catch (error) {
+     console.error("Kategorilerden veriler alınırken hata oluştu:", error);
+     return [];
+   }
+ }
+// console.log(getCategoriesTitles());
 
 // Örnek kullanım
 
@@ -46,18 +47,19 @@ async function getDocumentsInCategory(categoryName) {
 async function createCategoryObjects() {
   try {
     const categories = await getCategories();
+    const categoriesTitles = await getCategoriesTitles();
 
     for (const category of categories) {
       const categoryName = category.propertyName; // propertyName al
       const documents = await getDocumentsInCategory(categoryName); // Dokümanları al
 
-      // Dinamik obje oluştur
-      categoriesData[categoryName] = documents.map(doc => ({
-        id: doc.id,
-        ...doc,
-        
-         // Doküman verilerini ekle
-      }));
+      categoriesData[categoryName] = {
+        title: categoriesTitles.find(title => title === category.title), // Başlığı ekle
+        documents: documents.map(doc => ({
+          id: doc.id,
+          ...doc,
+        })),
+      };      
     }
 
     console.log(categoriesData); // Tüm kategorileri burada görebilirsin
