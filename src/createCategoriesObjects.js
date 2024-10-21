@@ -9,36 +9,32 @@ async function getCategories() {
   const snapshot = await getDocs(categoriesRef);
   return snapshot.docs.map(doc => ({
     id: doc.id,
+    select: doc.data().select, // Select özelliğini ekledik
     ...doc.data(),
-    
-  // Burada doc.data() fonksiyonu çağrılıyor
   }));
 }
 
- async function getCategoriesTitles(categoryName) {
-   try {
-     const categoriesSnapshot = await getDocs(collection(db, "categories"));
-     const categoriesTitles = categoriesSnapshot.docs.map(doc => doc.data().title);
-     return categoriesTitles;  // Title'ları döndürüyoruz
-   } catch (error) {
-     console.error("Kategorilerden veriler alınırken hata oluştu:", error);
-     return [];
-   }
- }
-// console.log(getCategoriesTitles());
+async function getCategoriesTitles(categoryName) {
+  try {
+    const categoriesSnapshot = await getDocs(collection(db, "categories"));
+    const categoriesTitles = categoriesSnapshot.docs.map(doc => doc.data().title);
 
-// Örnek kullanım
+    return categoriesTitles;  // Title'ları döndürüyoruz
+  } catch (error) {
+    console.error("Kategorilerden veriler alınırken hata oluştu:", error);
+    return [];
+  }
+}
 
 // Belirli bir kategori içindeki belgeleri al
 async function getDocumentsInCategory(categoryName) {
   const categoryRef = collection(db, categoryName);
   const snapshot = await getDocs(categoryRef);
   return snapshot.docs.map(doc => {
-    const data = doc.data(); // Burada da doc.data() fonksiyonunu çağırıyoruz
+    const data = doc.data();
     return {
       id: doc.id,
-      ...data,
-       // Data burada doğru bir şekilde alınıyor olmalı
+      ...data, // Data ve select özelliği de alınıyor
     };
   });
 }
@@ -55,6 +51,7 @@ async function createCategoryObjects() {
 
       categoriesData[categoryName] = {
         title: categoriesTitles.find(title => title === category.title), // Başlığı ekle
+        select: category.select, // Select özelliğini ekledik
         documents: documents.map(doc => ({
           id: doc.id,
           ...doc,
@@ -69,10 +66,9 @@ async function createCategoryObjects() {
   return categoriesData;
 }
 
-
 // Fonksiyonu çağır
 createCategoryObjects();
 
 export const fetchCategoriesData = async () => {
-    return await createCategoryObjects();
-  };// Diğer dosyalarda kullanılmak üzere dışa aktar
+  return await createCategoryObjects();
+}; // Diğer dosyalarda kullanılmak üzere dışa aktar

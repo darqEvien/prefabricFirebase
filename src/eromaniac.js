@@ -4,6 +4,8 @@ const categoriesDiv = document.querySelector(".main-content");
 const sideMenu = document.querySelector("#sidebarMenu");
 const totalPriceSpan = document.querySelector("#total");
 let selectedPrices = [];
+let selectedItemsPerCategory = {}; // Kategori bazında seçilen öğeler
+let categoryNames = []
 
 async function initializeCategories() {
   try {
@@ -12,7 +14,7 @@ async function initializeCategories() {
     for (const categoryName in categoriesData) {
       const category = categoriesData[categoryName]; // Category title ve documents al
       const items = category.documents; // Dokümanlar (ürünler)
-
+      const resultButton = document.getElementById("sonucBtn");
       // Her kategori için title bilgisini ekleyelim
       categoriesDiv.innerHTML += `
         <h3 id="${categoryName}__title">${
@@ -23,18 +25,23 @@ async function initializeCategories() {
       const container = document.getElementById(`${categoryName}`);
       const titles = category.title;
 
-      // Sidebar menüsüne buton ekleyelim
-      sideMenu.innerHTML += `
-      <div class="sidebar-item">
-        <button class="button-6" onclick="window.location='#${categoryName}Div'" id="${categoryName}__menu">${titles}</button>
-      </div>`;
+      categoryNames.push(categoryName)
+    
+
+      // Sidebar menüsüne butonu en üste ekleyelim
+      sideMenu.insertAdjacentHTML(
+        "beforebegin", // En üste ekler
+        `<div class="sidebar-item">
+      <button class="button-6" onclick="window.location='#${categoryName}Div'" id="${categoryName}__menu">${titles}</button>
+    </div>`
+      );
 
       items.forEach((item, index) => {
         const itemFiyat = JSON.stringify(item.price)
           .replace('"', "")
           .replace('"', "");
         const noktaliFiyat = itemFiyat.slice(0, -3) + "." + itemFiyat.slice(-3);
-
+        
         // Butona data-category ve data-index attribute ekle
         container.innerHTML += `
           <div class="focus-item" id="${categoryName}Div">
@@ -54,13 +61,13 @@ async function initializeCategories() {
     }
 
     // Event listener ekle
-    addButtonEventListeners();
+    addButtonEventListeners(categoriesData); // categoriesData'yı da event listenerlara yolluyoruz
   } catch (error) {
     console.error("Kategorileri yüklerken hata oluştu:", error);
   }
 }
 
-function addButtonEventListeners() {
+function addButtonEventListeners(categoriesData) {
   // Dinamik olarak eklenen butonları seçiyoruz
   const secButs = document.querySelectorAll(".proButs");
 
@@ -72,36 +79,59 @@ function addButtonEventListeners() {
       const index = button.getAttribute("data-index");
       const price = parseFloat(button.getAttribute("data-price"));
 
-      // categoryName ile doğru div'i seç
-      const allFocusItems = document.querySelectorAll(`#${categoryName}Div`);
-      allFocusItems.forEach((div) => div.classList.remove("selected"));
+     
+      const isSingleSelect = categoriesData[categoryName].select === "singleSelect"; // Kategorinin singleSelect olup olmadığını kontrol et
 
-      // Tıklanan butonun parent div'ini seç ve "selected" class'ını ekle
+      // categoryName ile doğru div'i seç
       const parentDiv = button.closest(`#${categoryName}Div`);
-      
-      if (parentDiv) {
-        parentDiv.classList.add("selected");
-        
-      }
-      if (!button.classList.contains("selected")) {
-        button.classList.add("selected");
-        selectedPrices.push(price); // Fiyatı listeye ekle
-      } else {
-        // Eğer buton zaten seçiliyse seçimi kaldır, fiyatı çıkar
+
+      // Eğer buton zaten seçiliyse, seçimi kaldır
+      if (button.classList.contains("selected")) {
         button.classList.remove("selected");
+        parentDiv.classList.remove("selected"); // Parent'dan selected class'ını kaldır
         const priceIndex = selectedPrices.indexOf(price);
         if (priceIndex > -1) {
           selectedPrices.splice(priceIndex, 1); // Fiyatı listeden çıkar
         }
+      } else {
+        // Eğer singleSelect ise önceki seçimi iptal et
+        if (isSingleSelect) {
+          const previouslySelectedButton = selectedItemsPerCategory[categoryName];
+          if (previouslySelectedButton && previouslySelectedButton !== button) {
+            previouslySelectedButton.classList.remove("selected");
+            const previousParentDiv = previouslySelectedButton.closest(`#${categoryName}Div`);
+            previousParentDiv.classList.remove("selected"); // Önceki seçimi kaldır
+            const previousPrice = parseFloat(previouslySelectedButton.getAttribute("data-price"));
+            const priceIndex = selectedPrices.indexOf(previousPrice);
+            if (priceIndex > -1) {
+              selectedPrices.splice(priceIndex, 1); // Önceki fiyatı çıkar
+            }
+          }
+          selectedItemsPerCategory[categoryName] = button; // Yeni seçimi kaydet
+        }
+
+        // Tıklanan butona ve parent div'ine "selected" class'ı ekle
+        button.classList.add("selected");
+        parentDiv.classList.add("selected");
+        selectedPrices.push(price); // Fiyatı listeye ekle
       }
       updateTotalPrice();
+      const currentIndex = categoryNames.indexOf(categoryName);
+      const nextIndex = currentIndex + 1;
+
+      if (nextIndex < categoryNames.length) {
+        const nextCategoryName = categoryNames[nextIndex];
+        // Bir sonraki kategoriye yönlendir
+        window.location = `#${nextCategoryName}Div`;
+      } else {
+        console.log("Son kategoriye ulaştınız.");
+      }
       console.log(
         `Kategori: ${categoryName}, Ürün indexi: ${index}, Fiyatı = ${price}`
       );
     });
   });
 }
-
 
 function updateTotalPrice() {
   // Seçilen tüm ürünlerin toplam fiyatını hesapla
@@ -111,7 +141,8 @@ function updateTotalPrice() {
   const totalPriceElement = document.getElementById("total");
   if (totalPriceElement) {
     totalPriceElement.textContent = `${totalPrice.toLocaleString()}₺`;
-  } 
+  }
 }
+
 // Sayfa yüklendiğinde kategorileri başlat
 initializeCategories();
