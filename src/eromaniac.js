@@ -4,33 +4,33 @@ const categoriesDiv = document.querySelector(".main-content");
 const sideMenu = document.querySelector("#sidebarMenu");
 let selectedPrices = [];
 let selectedItemsPerCategory = {};
-let tagFilters = {}; // Tüm kategoriler için tag'leri tutacak
+let tagFilters = {}; // To hold tags for all categories
 let categoryNames = [];
 
-// Kategorileri başlatma
+// Initialize categories
 async function initializeCategories() {
   try {
     const categoriesData = await fetchCategoriesData();
     renderCategories(categoriesData);
     addEventListeners(categoriesData);
   } catch (error) {
-    console.error("Kategorileri yüklerken hata oluştu:", error);
+    console.error("Error loading categories:", error);
   }
 }
 
-// Kategorileri ve ürünleri sayfaya yerleştirme
+// Render categories and products on the page
 function renderCategories(categoriesData) {
   for (const categoryName in categoriesData) {
     const category = categoriesData[categoryName];
     categoryNames.push(categoryName);
     tagFilters[categoryName] = [];
 
-    // Kategori başlığı ve konteyner
+    // Category title and container
     categoriesDiv.innerHTML += `
-      <h3 id="${categoryName}__title">${category.title || "Seçiniz"} Seçiniz.</h3>
+      <h3 id="${categoryName}__title">${category.title || "Select"}:</h3>
       <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>`;
 
-    // Sidebar butonu
+    // Sidebar button
     sideMenu.insertAdjacentHTML(
       "beforebegin",
       `<div class="sidebar-item">
@@ -40,20 +40,20 @@ function renderCategories(categoriesData) {
 
     const container = document.getElementById(categoryName);
 
-    // Ürünleri oluşturma
+    // Create products
     category.documents.forEach((item, index) => {
       container.innerHTML += createItemHtml(categoryName, item, index);
     });
 
-    // Filtreleri uygula
+    // Apply filters
     updateFilteredItems(categoryName, null);
   }
 }
 
-// Ürün HTML'ini oluşturma
+// Create product HTML
 function createItemHtml(categoryName, item, index) {
   const formattedPrice = (item.price / 1).toLocaleString("tr-TR");
-  const tags = Array.isArray(item.tag) ? item.tag.join(',') : item.tag; // Tag'leri bir dizi ise string'e çevir
+  const tags = Array.isArray(item.tag) ? item.tag.join(',') : item.tag; // Convert tags to string if it's an array
 
   return `
     <div class="focus-item" id="${categoryName}Div" data-tag="${tags || ''}">
@@ -65,20 +65,20 @@ function createItemHtml(categoryName, item, index) {
       </div>
       <div class="sizes__desc">
         <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
-        <p class="sizes__paragh">Fiyat: ${formattedPrice}₺</p>
+        <p class="sizes__paragh">Price: ${formattedPrice}₺</p>
       </div>
-      <button data-category="${categoryName}" data-index="${index}" data-price="${item.price}" class="button-6 proButs">Seç</button>
+      <button data-category="${categoryName}" data-index="${index}" data-price="${item.price}" class="button-6 proButs">Select</button>
     </div>`;
 }
 
-// Butonlara tıklama olaylarını ekleme
+// Add event listeners to buttons
 function addEventListeners(categoriesData) {
   document.querySelectorAll(".proButs").forEach(button => {
     button.addEventListener("click", () => handleItemClick(button, categoriesData));
   });
 }
 
-// Ürün seçimi veya seçimin kaldırılması
+// Handle item selection or deselection
 function handleItemClick(button, categoriesData) {
   const categoryName = button.getAttribute("data-category");
   const price = parseFloat(button.getAttribute("data-price"));
@@ -87,32 +87,33 @@ function handleItemClick(button, categoriesData) {
 
   if (button.classList.contains("selected")) {
     deselectItem(button, categoryName, price, parentDiv);
+    checkAndDeselectInvalidItems(); // Check when selection is removed
   } else {
-    // Eğer single select ise, mevcut seçimi kaldır
+    // If single select, remove current selection
     if (isSingleSelect && selectedItemsPerCategory[categoryName]) {
-      deselectItem(selectedItemsPerCategory[categoryName], categoryName, parseFloat(selectedItemsPerCategory[categoryName].getAttribute("data-price")), selectedItemsPerCategory[categoryName].closest(`#${categoryName}Div`));
+      deselectItem(selectedItemsPerCategory[categoryName], categoryName, parseFloat(selectedItemsPerCategory[categoryName].getAttribute("data-price")), selectedItemsPerCategory[ categoryName].closest(`#${categoryName}Div`));
     }
 
-    // Tag uyumu kontrolü kaldırıldı, ürün her durumda seçilebilir
     selectItem(button, categoryName, price, parentDiv);
+    checkAndDeselectInvalidItems(); // Check when selection is made
   }
 
   updateTotalPrice();
 }
 
-// Ürün seçimi
+// Select item
 function selectItem(button, categoryName, price, parentDiv) {
   toggleItemSelection(button, parentDiv, true);
   selectedPrices.push(price);
   selectedItemsPerCategory[categoryName] = button;
 
-  const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim()); // Tag'leri diziye çevir
+  const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim()); // Convert tags to array
   if (!tagFilters[categoryName] || !tagFilters[categoryName].length || tags.some(tag => tagFilters[categoryName].includes(tag))) {
-    tags.forEach(tag => updateTagFilters(categoryName, tag)); // Tüm tag'leri ekle
+    tags.forEach(tag => updateTagFilters(categoryName, tag)); // Add all tags
   }
 }
 
-// Ürün seçimini kaldırma
+// Deselect item
 function deselectItem(button, categoryName, price, parentDiv) {
   toggleItemSelection(button, parentDiv, false);
   removeSelectedPrice(price);
@@ -122,25 +123,25 @@ function deselectItem(button, categoryName, price, parentDiv) {
   tags.forEach(tag => updateTagFilters(categoryName, tag, true));
 }
 
-// Ürün seçim görselliğini değiştirme
+// Toggle item selection
 function toggleItemSelection(button, parentDiv, isSelected) {
   button.classList.toggle("selected", isSelected);
   parentDiv.classList.toggle("selected", isSelected);
 }
 
-// Fiyat güncelleme
+// Remove selected price
 function removeSelectedPrice(price) {
   const index = selectedPrices.indexOf(price);
   if (index > -1) selectedPrices.splice(index, 1);
 }
 
-// Toplam fiyat güncelleme
+// Update total price
 function updateTotalPrice() {
   const total = selectedPrices.reduce((acc, curr) => acc + curr, 0);
   document.getElementById("total").textContent = `${total.toLocaleString()}₺`;
 }
 
-// Tag filtreleme güncellemesi
+// Update tag filters
 function updateTagFilters(categoryName, tag, isRemoving = false) {
   if (!tagFilters[categoryName]) {
     tagFilters[categoryName] = [];
@@ -153,11 +154,12 @@ function updateTagFilters(categoryName, tag, isRemoving = false) {
       tagFilters[categoryName].push(tag);
     }
   }
+
+  // Apply tags to next categories
   applyTagsToNextCategories(categoryName);
-  checkAndDeselectInvalidItems();
 }
 
-// Sonraki kategorilere tag'leri uygulama
+// Apply tags to next categories
 function applyTagsToNextCategories(currentCategory) {
   const currentIndex = categoryNames.indexOf(currentCategory);
   const tagsToApply = tagFilters[currentCategory];
@@ -165,46 +167,75 @@ function applyTagsToNextCategories(currentCategory) {
   for (let i = currentIndex + 1; i < categoryNames.length; i++) {
     updateFilteredItems(categoryNames[i], tagsToApply);
   }
+
+  // Check and deselect invalid items
+  checkAndDeselectInvalidItems();
 }
 
-// Seçilen taglere göre ürünleri filtreleme
+// Filter items based on selected tags
 function updateFilteredItems(categoryName, selectedTags) {
   const allItems = document.querySelectorAll(`#${categoryName} .focus-item`);
-  let hasMatchingTag = false;
 
   allItems.forEach(item => {
-    const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim()); // Tüm tag'leri diziye çevir
+    const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
 
-    // Tag'leri kontrol et
-    if (selectedTags && !selectedTags.some(tag => itemTags.includes(tag)) && itemTags[0] !== '') {
-      item.style.display = "none"; // Uygun olmayan tag'ler gizlenir
+    // If no tags are selected, show all products
+    if (!selectedTags || selectedTags.length === 0) {
+      item.style.display = "block"; // Show all items
+      return;
+    }
+
+    // If tag is empty, always show
+    if (itemTags[0] === '') {
+      item.style.display = "block";
+      return;
+    }
+
+    // Compare with selected tags
+    const hasMatchingTag = selectedTags.some(tag => itemTags.includes(tag));
+
+    if (hasMatchingTag) {
+      item.style.display = "block";
     } else {
-      item.style.display = "block"; // Uygun ürünler veya tag yoksa tümü gösterilir
-      hasMatchingTag = true;
+      item.style.display = "none";
     }
   });
 
-  // Eğer seçilen tag ile eşleşen ürün yoksa tüm ürünleri göster
-  if (!hasMatchingTag) {
-    allItems.forEach(item => item.style.display = "block");
+  // Check if any items are visible
+  const anyVisibleItems = Array.from(allItems).some(item => item.style.display === "block");
+  if (!anyVisibleItems) {
+    allItems.forEach(item => item.style.display = "block"); // Show all if none are visible
   }
-}
 
-// Seçilen taglere uymayan ürünlerin seçimini kaldırma ve fiyatı güncelleme
+  // Check and deselect invalid items
+  checkAndDeselectInvalidItems();
+}
+// Check and deselect invalid items
+// Check and deselect invalid items
 function checkAndDeselectInvalidItems() {
   for (const categoryName in selectedItemsPerCategory) {
     const selectedItem = selectedItemsPerCategory[categoryName];
     if (selectedItem) {
       const selectedTags = selectedItem.closest('.focus-item').getAttribute('data-tag').split(',').map(t => t.trim());
-      const applicableTags = tagFilters[categoryNames[0]]; // İlk kategorideki seçilen tag'ler
+      const applicableTags = tagFilters[categoryName];
 
-      // Tag uyumsuzluğu kontrolü kaldırıldı
-      // Tüm ürünler seçilebilir, bu yüzden burayı kaldırdık.
+      // If tags are not valid, deselect item
+      const hasValidTag = selectedTags[0] === '' || selectedTags.some(tag => applicableTags.includes(tag));
+
+      // Check if the selected item is still visible based on current filters
+      const isVisible = Array.from(document.querySelectorAll(`#${categoryName} .focus-item`)).some(item => {
+        const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
+        return selectedTags.some(tag => itemTags.includes(tag)) && item.style.display === "block";
+      });
+
+      if (!hasValidTag || !isVisible) {
+        deselectItem(selectedItem, categoryName, parseFloat(selectedItem.getAttribute("data-price")), selectedItem.closest(`#${categoryName}Div`));
+      }
     }
   }
 
-  updateTotalPrice(); // Fiyat güncellemesi
+  updateTotalPrice(); // Update price
 }
 
-// Sayfa yüklendiğinde kategorileri başlat
+// Initialize categories on page load
 document.addEventListener("DOMContentLoaded", initializeCategories);
