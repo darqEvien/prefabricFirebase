@@ -166,7 +166,7 @@ body {
   margin-bottom: 1rem;
   border-radius: 2%;
   /* height: auto; */
-  height: 21.5rem;
+  /* height: 21.5rem; */
 }
 .ero__ort{
   min-height: 200px;
@@ -320,100 +320,4 @@ body {
   transform: scale(1.5);
   transition: all 0.3s ease;
 }
-
-input[type="radio"] {
-  display: none;
-}
-#mutYes:checked:checked ~ .option-1,
-#mutNo:checked:checked ~ .option-2{
-border-color: #0069d9;
-background: #0069d9;
-}
-#mutYes:checked:checked ~ .option-1 .dot,
-#mutNo:checked:checked ~ .option-2 .dot{
-background: #fff;
-}
-#mutYes:checked:checked ~ .option-1 .dot::before,
-#mutNo:checked:checked ~ .option-2 .dot::before{
-opacity: 1;
-transform: scale(1);
-}
-.mutfakForm .option span{
-  .wrapper .option span{
-      font-size: 20px;
-      color: #808080;
-    }
-}
-#mutYes:checked:checked ~ .option-1 span,
-#mutNo:checked:checked ~ .option-2 span{
-color: #fff;
-}
-.mutImg {
-  max-height: 300px;
-  max-width: 500px;
-}
-#buzYes:checked:checked ~ .option-1,
-#buzNo:checked:checked ~ .option-2{
-border-color: #0069d9;
-background: #0069d9;
-}
-#buzYes:checked:checked ~ .option-1 .dot,
-#buzNo:checked:checked ~ .option-2 .dot{
-background: #fff;
-}
-#buzYes:checked:checked ~ .option-1 .dot::before,
-#buzNo:checked:checked ~ .option-2 .dot::before{
-opacity: 1;
-transform: scale(1);
-}
-#buzYes:checked:checked ~ .option-1 span,
-#buzNo:checked:checked ~ .option-2 span{
-color: #fff;
-} 
-
-#buzdolabiBolme {
-  display: none;
-}
-
-#banyoYes:checked:checked ~ .option-1,
-#banyoNo:checked:checked ~ .option-2{
-border-color: #0069d9;
-background: #0069d9;
-}
-#banyoYes:checked:checked ~ .option-1 .dot,
-#banyoNo:checked:checked ~ .option-2 .dot{
-background: #fff;
-}
-#banyoYes:checked:checked ~ .option-1 .dot::before,
-#banyoNo:checked:checked ~ .option-2 .dot::before{
-opacity: 1;
-transform: scale(1);
-}
-#banyoYes:checked:checked ~ .option-1 span,
-#banyoNo:checked:checked ~ .option-2 span{
-color: #fff;
-} 
-
-#jakuziBolme {
-  display: none;
-}
-
-#jakuziYes:checked:checked ~ .option-1,
-#jakuziNo:checked:checked ~ .option-2{
-border-color: #0069d9;
-background: #0069d9;
-}
-#jakuziYes:checked:checked ~ .option-1 .dot,
-#jakuziNo:checked:checked ~ .option-2 .dot{
-background: #fff;
-}
-#jakuziYes:checked:checked ~ .option-1 .dot::before,
-#jakuziNo:checked:checked ~ .option-2 .dot::before{
-opacity: 1;
-transform: scale(1);
-}
-#jakuziYes:checked:checked ~ .option-1 span,
-#jakuziNo:checked:checked ~ .option-2 span{
-color: #fff;
-} 
 

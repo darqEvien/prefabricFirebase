@@ -27,7 +27,7 @@ function renderCategories(categoriesData) {
 
     // Category title and container
     categoriesDiv.innerHTML += `
-      <h3 id="${categoryName}__title">${category.title || "Select"}:</h3>
+      <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
       <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>`;
 
     // Sidebar button
@@ -63,10 +63,17 @@ function createItemHtml(categoryName, item, index) {
         </div>
         <img class="product__img content__ort" src="${item.imageUrl}" alt="${item.name}">
       </div>
+     <details>
+  <summary style="margin: 0 auto;cursor:pointer;display: flex;justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
+  <p>${item.description}</p>
+</details>
+<hr>
       <div class="sizes__desc">
         <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
         <p class="sizes__paragh">Fiyat: ${formattedPrice}₺</p>
+        
       </div>
+      
       <button data-category="${categoryName}" data-index="${index}" data-price="${item.price}" class="button-6 proButs">Seç</button>
     </div>`;
 }
