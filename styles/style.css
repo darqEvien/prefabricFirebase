@@ -210,6 +210,18 @@ body {
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
+.proButs {
+  background-color: white;
+  color: gold;
+  border-color: gold;
+ 
+}
+.proButs:hover {
+  background-color: gold;
+  color: white;
+  border-color: white;
+}
+
 
 #total__section {
   text-align: center;

@@ -65,9 +65,9 @@ function createItemHtml(categoryName, item, index) {
       </div>
       <div class="sizes__desc">
         <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
-        <p class="sizes__paragh">Price: ${formattedPrice}₺</p>
+        <p class="sizes__paragh">Fiyat: ${formattedPrice}₺</p>
       </div>
-      <button data-category="${categoryName}" data-index="${index}" data-price="${item.price}" class="button-6 proButs">Select</button>
+      <button data-category="${categoryName}" data-index="${index}" data-price="${item.price}" class="button-6 proButs">Seç</button>
     </div>`;
 }
 
