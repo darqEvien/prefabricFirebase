@@ -94,15 +94,15 @@ function handleItemClick(button, categoriesData) {
 
   if (button.classList.contains("selected")) {
     deselectItem(button, categoryName, price, parentDiv);
-    checkAndDeselectInvalidItems(); // Check when selection is removed
+    checkAndDeselectInvalidItems(); 
   } else {
-    // If single select, remove current selection
+   
     if (isSingleSelect && selectedItemsPerCategory[categoryName]) {
       deselectItem(selectedItemsPerCategory[categoryName], categoryName, parseFloat(selectedItemsPerCategory[categoryName].getAttribute("data-price")), selectedItemsPerCategory[ categoryName].closest(`#${categoryName}Div`));
     }
 
     selectItem(button, categoryName, price, parentDiv);
-    checkAndDeselectInvalidItems(); // Check when selection is made
+    checkAndDeselectInvalidItems(); 
   }
 
   updateTotalPrice();
@@ -114,9 +114,9 @@ function selectItem(button, categoryName, price, parentDiv) {
   selectedPrices.push(price);
   selectedItemsPerCategory[categoryName] = button;
 
-  const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim()); // Convert tags to array
+  const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim()); 
   if (!tagFilters[categoryName] || !tagFilters[categoryName].length || tags.some(tag => tagFilters[categoryName].includes(tag))) {
-    tags.forEach(tag => updateTagFilters(categoryName, tag)); // Add all tags
+    tags.forEach(tag => updateTagFilters(categoryName, tag)); 
   }
 }
 
