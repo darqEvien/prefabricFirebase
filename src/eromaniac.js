@@ -39,7 +39,12 @@ function renderCategories(categoriesData) {
     );
 
     const container = document.getElementById(categoryName);
+    const sortedItems = category.documents.sort((a, b) => a.order - b.order);
 
+    // Ürünleri oluştur
+    sortedItems.forEach((item, index) => {
+      container.innerHTML += createItemHtml(categoryName, item, index);
+    });
     // Create products
     category.documents.forEach((item, index) => {
       container.innerHTML += createItemHtml(categoryName, item, index);

@@ -1,12 +1,13 @@
 import { db } from './firebaseConfig'; // Firebase ayarlarını içeren dosya
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 let categoriesData = {}; // Kategorileri saklayacak
 
 // Kategorileri al
 async function getCategories() {
+  const cq = query(collection(db,"categories"),orderBy("order"))
   const categoriesRef = collection(db, 'categories');
-  const snapshot = await getDocs(categoriesRef);
+  const snapshot = await getDocs(cq);
   return snapshot.docs.map(doc => ({
     id: doc.id,
     select: doc.data().select, // Select özelliğini ekledik
@@ -16,6 +17,7 @@ async function getCategories() {
 
 async function getCategoriesTitles(categoryName) {
   try {
+    
     const categoriesSnapshot = await getDocs(collection(db, "categories"));
     const categoriesTitles = categoriesSnapshot.docs.map(doc => doc.data().title);
 
