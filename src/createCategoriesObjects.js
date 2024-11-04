@@ -6,7 +6,7 @@ let categoriesData = {}; // Kategorileri saklayacak
 // Kategorileri al
 async function getCategories() {
   const cq = query(collection(db,"categories"),orderBy("order"))
-  const categoriesRef = collection(db, 'categories');
+  // const categoriesRef = collection(db, 'categories');
   const snapshot = await getDocs(cq);
   return snapshot.docs.map(doc => ({
     id: doc.id,
@@ -69,7 +69,7 @@ async function createCategoryObjects() {
 }
 
 // Fonksiyonu çağır
-createCategoryObjects();
+// createCategoryObjects();
 
 export const fetchCategoriesData = async () => {
   return await createCategoryObjects();

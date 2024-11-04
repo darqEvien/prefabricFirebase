@@ -25,12 +25,12 @@ function renderCategories(categoriesData) {
     categoryNames.push(categoryName);
     tagFilters[categoryName] = [];
 
-    // Category title and container
+    // Kategori başlığı ve konteyner
     categoriesDiv.innerHTML += `
       <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
       <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>`;
 
-    // Sidebar button
+    // Sidebar butonu
     sideMenu.insertAdjacentHTML(
       "beforebegin",
       `<div class="sidebar-item">
@@ -45,12 +45,8 @@ function renderCategories(categoriesData) {
     sortedItems.forEach((item, index) => {
       container.innerHTML += createItemHtml(categoryName, item, index);
     });
-    // Create products
-    category.documents.forEach((item, index) => {
-      container.innerHTML += createItemHtml(categoryName, item, index);
-    });
 
-    // Apply filters
+    // Filtreleri uygula
     updateFilteredItems(categoryName, null);
   }
 }
@@ -114,17 +110,21 @@ function handleItemClick(button, categoriesData) {
 }
 
 // Select item
+let selectedTagsPerCategory = {}; // Seçilen etiketleri saklamak için eklenen nesne
+
 function selectItem(button, categoryName, price, parentDiv) {
-  toggleItemSelection(button, parentDiv, true);
-  selectedPrices.push(price);
-  selectedItemsPerCategory[categoryName] = button;
+    toggleItemSelection(button, parentDiv, true);
+    selectedPrices.push(price);
+    selectedItemsPerCategory[categoryName] = button;
 
-  const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim()); 
-  if (!tagFilters[categoryName] || !tagFilters[categoryName].length || tags.some(tag => tagFilters[categoryName].includes(tag))) {
-    tags.forEach(tag => updateTagFilters(categoryName, tag)); 
-  }
+    const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
+    
+    // Seçilen etiketleri sakla
+    selectedTagsPerCategory[categoryName] = tags;
+
+    // Diğer kategorilerdeki tag filtrelerini güncelle
+    updateTagFilters(categoryName, tags);
 }
-
 // Deselect item
 function deselectItem(button, categoryName, price, parentDiv) {
   toggleItemSelection(button, parentDiv, false);
@@ -187,66 +187,47 @@ function applyTagsToNextCategories(currentCategory) {
 // Filter items based on selected tags
 function updateFilteredItems(categoryName, selectedTags) {
   const allItems = document.querySelectorAll(`#${categoryName} .focus-item`);
+  const initialCategoryName = Object.keys(selectedTagsPerCategory)[0]; // İlk seçilen kategori
 
   allItems.forEach(item => {
-    const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
+      const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
 
-    // If no tags are selected, show all products
-    if (!selectedTags || selectedTags.length === 0) {
-      item.style.display = "block"; // Show all items
-      return;
-    }
+      // Eğer ilk kategoriye göre filtreleme yapılıyorsa
+      if (initialCategoryName) {
+          const initialTags = selectedTagsPerCategory[initialCategoryName] || [];
+          const hasMatchingTag = initialTags.some(tag => itemTags.includes(tag));
 
-    // If tag is empty, always show
-    if (itemTags[0] === '') {
-      item.style.display = "block";
-      return;
-    }
-
-    // Compare with selected tags
-    const hasMatchingTag = selectedTags.some(tag => itemTags.includes(tag));
-
-    if (hasMatchingTag) {
-      item.style.display = "block";
-    } else {
-      item.style.display = "none";
-    }
+          // İlk kategoriye göre filtrele
+          item.style.display = hasMatchingTag ? "block" : "none";
+      } else {
+          // Eğer hiçbir kategori seçilmemişse, tüm ürünleri göster
+          item.style.display = "block";
+      }
   });
 
-  // Check if any items are visible
-  const anyVisibleItems = Array.from(allItems).some(item => item.style.display === "block");
-  if (!anyVisibleItems) {
-    allItems.forEach(item => item.style.display = "block"); // Show all if none are visible
-  }
-
-  // Check and deselect invalid items
+  // Diğer kategorilerdeki görünür ürünleri kontrol et
   checkAndDeselectInvalidItems();
 }
 // Check and deselect invalid items
-// Check and deselect invalid items
 function checkAndDeselectInvalidItems() {
+  const initialCategoryName = Object.keys(selectedTagsPerCategory)[0]; // İlk seçilen kategori
+  const initialTags = selectedTagsPerCategory[initialCategoryName] || [];
+
   for (const categoryName in selectedItemsPerCategory) {
-    const selectedItem = selectedItemsPerCategory[categoryName];
-    if (selectedItem) {
-      const selectedTags = selectedItem.closest('.focus-item').getAttribute('data-tag').split(',').map(t => t.trim());
-      const applicableTags = tagFilters[categoryName];
+      const selectedItem = selectedItemsPerCategory[categoryName];
+      if (selectedItem) {
+          const selectedTags = selectedItem.closest('.focus-item').getAttribute('data-tag').split(',').map(t => t.trim());
 
-      // If tags are not valid, deselect item
-      const hasValidTag = selectedTags[0] === '' || selectedTags.some(tag => applicableTags.includes(tag));
+          // Eğer ilk kategoriye göre geçersizse, iptal et
+          const hasValidTag = initialTags.length === 0 || selectedTags.some(tag => initialTags.includes(tag));
 
-      // Check if the selected item is still visible based on current filters
-      const isVisible = Array.from(document.querySelectorAll(`#${categoryName} .focus-item`)).some(item => {
-        const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
-        return selectedTags.some(tag => itemTags.includes(tag)) && item.style.display === "block";
-      });
-
-      if (!hasValidTag || !isVisible) {
-        deselectItem(selectedItem, categoryName, parseFloat(selectedItem.getAttribute("data-price")), selectedItem.closest(`#${categoryName}Div`));
+          if (!hasValidTag) {
+              deselectItem(selectedItem, categoryName, parseFloat(selectedItem.getAttribute("data-price")), selectedItem.closest(`#${categoryName}Div`));
+          }
       }
-    }
   }
 
-  updateTotalPrice(); // Update price
+  updateTotalPrice(); // Toplam fiyatı güncelle
 }
 
 // Initialize categories on page load
