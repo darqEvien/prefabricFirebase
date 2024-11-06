@@ -101,6 +101,7 @@ body {
   touch-action: manipulation;
   vertical-align: baseline;
   width: 100%;
+  transition: border-color 0.2s ease;
 }
 
 .button-6:hover {
@@ -133,10 +134,11 @@ body {
 /* Main content styles */
 .main-content {
   width: 75%;
-  background-color: white;
+  background-color: #f9f9f9;
   padding: 20px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   margin-left: 20px;
+  border-left: 3px solid gold;
 }
 
 .main-content img {
@@ -158,6 +160,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  transition: border-color 0.2s ease;
 }
 
 .focus-item {
@@ -165,6 +168,7 @@ body {
   padding: 10px;
   margin-bottom: 1rem;
   border-radius: 2%;
+  transition: border-color 0.2s ease;
   /* height: auto; */
   /* height: 21.5rem; */
 }
@@ -202,14 +206,6 @@ body {
   font-weight: 400;
 }
 
-#products__container {
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
 .proButs {
   background-color: white;
   color: black;
@@ -232,15 +228,6 @@ body {
   min-height: 8rem;
 }
 
-#veranda__container {
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
 .title__ort {
   height: 4.2rem;
   text-align: center;
@@ -252,72 +239,12 @@ body {
   max-height: 140px;
 }
 
-#mutfakDiv {
-  display: flex;
-  justify-content: center;
-  text-align: center;
-}
-#banyoDiv {
-  display: flex;
-  justify-content: center;
-  text-align: center;
-}
 
-.banyoForm {
-  display: inline-flex;
-  background: #fff;
-  height: 50px;
-  width: 400px;
-  align-items: center;
-  justify-content: space-evenly;
-  border-radius: 5px;
-  padding: 20px 15px;
+.focus-item, .button-6 {
+  transform: translateZ(0);
+  will-change: transform;
 }
-.mutfakForm {
-  display: inline-flex;
-  background: #fff;
-  height: 50px;
-  width: 400px;
-  align-items: center;
-  justify-content: space-evenly;
-  border-radius: 5px;
-  padding: 20px 15px;
-}
-
-.mutfakForm .option {
-  background: #fff;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  margin: 0 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 0 10px;
-  border: 2px solid lightgrey;
-  transition: all 0.3s ease;
-}
-
-.mutfakForm .option .dot {
-  height: 20px;
-  width: 20px;
-  background: #d9d9d9;
-  border-radius: 50%;
-  position: relative;
-}
-
-.mutfakForm .option .dot::before {
-  position: absolute;
-  content: "";
-  top: 4px;
-  left: 4px;
-  width: 12px;
-  height: 12px;
-  background: #0069d9;
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(1.5);
-  transition: all 0.3s ease;
+.category-container {
+  margin-bottom: 30px;
 }
 

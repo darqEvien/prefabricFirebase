@@ -6,6 +6,7 @@ let selectedPrices = [];
 let selectedItemsPerCategory = {};
 let tagFilters = {}; // To hold tags for all categories
 let categoryNames = [];
+let selectedTagsPerCategory = {}; // Seçilen etiketleri saklamak için eklenen nesne
 
 // Initialize categories
 async function initializeCategories() {
@@ -21,37 +22,105 @@ async function initializeCategories() {
 
 // Render categories and products on the page
 function renderCategories(categoriesData) {
-  for (const categoryName in categoriesData) {
-    const category = categoriesData[categoryName];
-    
-    // Sadece parentCategory'si boş veya olmayan kategorileri işle
+  // Önce tüm kategorileri order'a göre sıralayalım
+  const sortedCategories = Object.entries(categoriesData)
+    .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+
+  // Ana kategorileri render edelim
+  for (const [categoryName, category] of sortedCategories) {
     if (!category.parentCategory || category.parentCategory === "") {
       categoryNames.push(categoryName);
       tagFilters[categoryName] = [];
 
-      // Kategori başlığı ve konteyner
-      categoriesDiv.innerHTML += `
+      renderCategory(categoryName, category, categoriesData);
+    }
+  }
+}
+
+// Tek bir kategoriyi render eden yardımcı fonksiyon
+function renderCategory(categoryName, category, categoriesData) {
+  const categoryHTML = `
+    <div class="category-container" id="${categoryName}_container">
+      <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
+      <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+    </div>
+  `;
+
+  categoriesDiv.insertAdjacentHTML('beforeend', categoryHTML);
+
+  // Sidebar menü butonu
+  sideMenu.insertAdjacentHTML(
+    "beforebegin",
+    `<div class="sidebar-item">
+      <button class="button-6" onclick="window.location='#${categoryName}_container'" id="${categoryName}__menu">
+        ${category.title}
+      </button>
+    </div>`
+  );
+
+  const container = document.getElementById(categoryName);
+  const sortedItems = category.documents.sort((a, b) => a.order - b.order);
+
+  // Ürünleri toplu şekilde ekleyelim
+  const itemsHTML = sortedItems.map((item, index) => 
+    createItemHtml(categoryName, item, index)
+  ).join('');
+  
+  container.innerHTML = itemsHTML;
+
+  // Alt kategorileri render et
+  renderSubcategories(categoryName, categoriesData);
+}
+
+// Alt kategorileri render eden fonksiyon
+function renderSubcategories(parentCategoryName, categoriesData) {
+  const parentContainer = document.getElementById(`${parentCategoryName}_container`);
+  if (!parentContainer) return;
+
+  // Alt kategorileri filtrele ve sırala
+  const subcategories = Object.entries(categoriesData)
+    .filter(([_, category]) => category.parentCategory === parentCategoryName)
+    .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+
+  // Alt kategorileri sırayla ekle
+  subcategories.forEach(([categoryName, category]) => {
+    categoryNames.push(categoryName);
+    tagFilters[categoryName] = [];
+
+    const subcategoryHTML = `
+      <div class="subcategory-container" id="${categoryName}_container" data-parent="${parentCategoryName}">
         <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
-        <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>`;
+        <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+      </div>
+    `;
+    
+    parentContainer.insertAdjacentHTML('beforeend', subcategoryHTML);
 
-      // Sidebar butonu
-      sideMenu.insertAdjacentHTML(
-        "beforebegin",
-        `<div class="sidebar-item">
-          <button class="button-6" onclick="window.location='#${categoryName}Div'" id="${categoryName}__menu">${category.title}</button>
-        </div>`
-      );
+    const container = document.getElementById(categoryName);
+    const sortedItems = category.documents.sort((a, b) => a.order - b.order);
+    
+    const itemsHTML = sortedItems.map((item, index) => 
+      createItemHtml(categoryName, item, index)
+    ).join('');
+    
+    container.innerHTML = itemsHTML;
+  });
+}
 
+
+function hideSubcategories(parentCategoryName, categoriesData) {
+  for (const categoryName in categoriesData) {
+    const category = categoriesData[categoryName];
+    
+    if (category.parentCategory === parentCategoryName) {
       const container = document.getElementById(categoryName);
-      const sortedItems = category.documents.sort((a, b) => a.order - b.order);
-
-      // Ürünleri oluştur
-      sortedItems.forEach((item, index) => {
-        container.innerHTML += createItemHtml(categoryName, item, index);
-      });
-
-      // Filtreleri uygula
-      updateFilteredItems(categoryName, null);
+      if (container) {
+        container.remove();
+      }
+      const title = document.getElementById(`${categoryName}__title`);
+      if (title) {
+        title.remove();
+      }
     }
   }
 }
@@ -91,52 +160,98 @@ function addEventListeners(categoriesData) {
 }
 
 // Handle item selection or deselection
+const itemCache = new Map();
+
 function handleItemClick(button, categoriesData) {
   const categoryName = button.getAttribute("data-category");
   const price = parseFloat(button.getAttribute("data-price"));
   const parentDiv = button.closest(".focus-item");
   const isSingleSelect = categoriesData[categoryName].select === "singleSelect";
 
-  if (button.classList.contains("selected")) {
-    deselectItem(button, categoryName, price, parentDiv);
-    checkAndDeselectInvalidItems(); 
-  } else {
-   
-    if (isSingleSelect && selectedItemsPerCategory[categoryName]) {
-      deselectItem(selectedItemsPerCategory[categoryName], categoryName, parseFloat(selectedItemsPerCategory[categoryName].getAttribute("data-price")), selectedItemsPerCategory[ categoryName].closest(`#${categoryName}Div`));
+  // Tıklama işlemini debounce edelim
+  if (button.dataset.processing) return;
+  button.dataset.processing = true;
+
+  requestAnimationFrame(() => {
+    if (button.classList.contains("selected")) {
+      deselectItem(button, categoryName, price, parentDiv);
+    } else {
+      if (isSingleSelect && selectedItemsPerCategory[categoryName]) {
+        const previousButton = selectedItemsPerCategory[categoryName];
+        deselectItem(
+          previousButton,
+          categoryName,
+          parseFloat(previousButton.getAttribute("data-price")),
+          previousButton.closest(".focus-item")
+        );
+      }
+      selectItem(button, categoryName, price, parentDiv);
     }
 
-    selectItem(button, categoryName, price, parentDiv);
-    checkAndDeselectInvalidItems(); 
-  }
+    // Sadece etkilenen kategorileri güncelle
+    const affectedCategories = getAffectedCategories(categoryName, categoriesData);
+    updateAffectedCategories(affectedCategories, categoriesData);
+    
+    updateTotalPrice();
+    delete button.dataset.processing;
+  });
+}
+// Select item
 
-  updateTotalPrice();
+function getAffectedCategories(categoryName, categoriesData) {
+  const affected = new Set();
+  const categoryIndex = categoryNames.indexOf(categoryName);
+  
+  // Sadece seçilen kategoriden sonraki kategorileri ekle
+  for (let i = categoryIndex + 1; i < categoryNames.length; i++) {
+    affected.add(categoryNames[i]);
+  }
+  
+  return Array.from(affected);
 }
 
-// Select item
-let selectedTagsPerCategory = {}; // Seçilen etiketleri saklamak için eklenen nesne
+function updateAffectedCategories(categories, categoriesData) {
+  categories.forEach(categoryName => {
+    const container = document.getElementById(categoryName);
+    if (!container) return;
 
+    const items = container.querySelectorAll('.focus-item');
+    const initialCategoryName = Object.keys(selectedTagsPerCategory)[0];
+    const initialTags = selectedTagsPerCategory[initialCategoryName] || [];
+
+    items.forEach(item => {
+      const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
+      const hasMatchingTag = initialTags.length === 0 || 
+                            itemTags.some(tag => initialTags.includes(tag));
+      
+      // DOM'u sadece gerektiğinde güncelle
+      const shouldBeVisible = hasMatchingTag ? "grid" : "none";
+      if (item.style.display !== shouldBeVisible) {
+        item.style.display = shouldBeVisible;
+      }
+    });
+  });
+}
 function selectItem(button, categoryName, price, parentDiv) {
-    toggleItemSelection(button, parentDiv, true);
+  if (!button.classList.contains("selected")) {
+    button.classList.add("selected");
+    parentDiv.classList.add("selected");
     selectedPrices.push(price);
     selectedItemsPerCategory[categoryName] = button;
 
     const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
-    
-    // Seçilen etiketleri sakla
     selectedTagsPerCategory[categoryName] = tags;
-
-    // Diğer kategorilerdeki tag filtrelerini güncelle
-    updateTagFilters(categoryName, tags);
+  }
 }
 // Deselect item
 function deselectItem(button, categoryName, price, parentDiv) {
-  toggleItemSelection(button, parentDiv, false);
-  removeSelectedPrice(price);
-  selectedItemsPerCategory[categoryName] = null;
-
-  const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
-  tags.forEach(tag => updateTagFilters(categoryName, tag, true));
+  if (button.classList.contains("selected")) {
+    button.classList.remove("selected");
+    parentDiv.classList.remove("selected");
+    removeSelectedPrice(price);
+    selectedItemsPerCategory[categoryName] = null;
+    delete selectedTagsPerCategory[categoryName];
+  }
 }
 
 // Toggle item selection
@@ -152,10 +267,16 @@ function removeSelectedPrice(price) {
 }
 
 // Update total price
-function updateTotalPrice() {
-  const total = selectedPrices.reduce((acc, curr) => acc + curr, 0);
-  document.getElementById("total").textContent = `${total.toLocaleString()}₺`;
-}
+const updateTotalPrice = (() => {
+  let frameRequest;
+  return () => {
+    if (frameRequest) cancelAnimationFrame(frameRequest);
+    frameRequest = requestAnimationFrame(() => {
+      const total = selectedPrices.reduce((acc, curr) => acc + curr, 0);
+      document.getElementById("total").textContent = `${total.toLocaleString()}₺`;
+    });
+  };
+})();
 
 // Update tag filters
 function updateTagFilters(categoryName, tag, isRemoving = false) {
@@ -208,9 +329,6 @@ function updateFilteredItems(categoryName, selectedTags) {
           item.style.display = "block";
       }
   });
-
-  // Diğer kategorilerdeki görünür ürünleri kontrol et
-  checkAndDeselectInvalidItems();
 }
 // Check and deselect invalid items
 function checkAndDeselectInvalidItems() {
