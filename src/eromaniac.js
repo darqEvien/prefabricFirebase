@@ -32,13 +32,12 @@ function renderCategories(categoriesData) {
       categoryNames.push(categoryName);
       tagFilters[categoryName] = [];
 
-      renderCategory(categoryName, category, categoriesData);
+      renderCategory(categoryName, category);
     }
   }
 }
-
 // Tek bir kategoriyi render eden yardımcı fonksiyon
-function renderCategory(categoryName, category, categoriesData) {
+function renderCategory(categoryName, category) {
   const categoryHTML = `
     <div class="category-container" id="${categoryName}_container">
       <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
@@ -67,15 +66,24 @@ function renderCategory(categoryName, category, categoriesData) {
   ).join('');
   
   container.innerHTML = itemsHTML;
-
-  // Alt kategorileri render et
-  renderSubcategories(categoryName, categoriesData);
 }
 
 // Alt kategorileri render eden fonksiyon
 function renderSubcategories(parentCategoryName, categoriesData) {
   const parentContainer = document.getElementById(`${parentCategoryName}_container`);
   if (!parentContainer) return;
+
+  // Mevcut alt kategorileri temizle
+  const existingSubcategories = document.querySelectorAll(`[data-parent="${parentCategoryName}"]`);
+  existingSubcategories.forEach(el => el.remove());
+
+  // Ana kategoride seçilen ürünün tag'lerini al
+  const selectedParentItem = selectedItemsPerCategory[parentCategoryName];
+  let selectedParentTags = [];
+  if (selectedParentItem) {
+    const parentDiv = selectedParentItem.closest('.focus-item');
+    selectedParentTags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
+  }
 
   // Alt kategorileri filtrele ve sırala
   const subcategories = Object.entries(categoriesData)
@@ -84,9 +92,6 @@ function renderSubcategories(parentCategoryName, categoriesData) {
 
   // Alt kategorileri sırayla ekle
   subcategories.forEach(([categoryName, category]) => {
-    categoryNames.push(categoryName);
-    tagFilters[categoryName] = [];
-
     const subcategoryHTML = `
       <div class="subcategory-container" id="${categoryName}_container" data-parent="${parentCategoryName}">
         <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
@@ -97,7 +102,14 @@ function renderSubcategories(parentCategoryName, categoriesData) {
     parentContainer.insertAdjacentHTML('beforeend', subcategoryHTML);
 
     const container = document.getElementById(categoryName);
-    const sortedItems = category.documents.sort((a, b) => a.order - b.order);
+    let sortedItems = category.documents.sort((a, b) => a.order - b.order);
+
+    // Ana kategoride bir ürün seçilmişse, alt kategori ürünlerini filtrele
+    if (selectedParentTags.length > 0) {
+      sortedItems = sortedItems.filter(item => 
+        item.tag && selectedParentTags.some(tag => item.tag.includes(tag))
+      );
+    }
     
     const itemsHTML = sortedItems.map((item, index) => 
       createItemHtml(categoryName, item, index)
@@ -105,24 +117,16 @@ function renderSubcategories(parentCategoryName, categoriesData) {
     
     container.innerHTML = itemsHTML;
   });
+
+  addEventListeners(categoriesData);
 }
 
 
 function hideSubcategories(parentCategoryName, categoriesData) {
-  for (const categoryName in categoriesData) {
-    const category = categoriesData[categoryName];
-    
-    if (category.parentCategory === parentCategoryName) {
-      const container = document.getElementById(categoryName);
-      if (container) {
-        container.remove();
-      }
-      const title = document.getElementById(`${categoryName}__title`);
-      if (title) {
-        title.remove();
-      }
-    }
-  }
+  const subcategories = document.querySelectorAll(`[data-parent="${parentCategoryName}"]`);
+  subcategories.forEach(subcategory => {
+    subcategory.remove();
+  });
 }
 // Create product HTML
 function createItemHtml(categoryName, item, index) {
@@ -160,21 +164,25 @@ function addEventListeners(categoriesData) {
 }
 
 // Handle item selection or deselection
-const itemCache = new Map();
+
 
 function handleItemClick(button, categoriesData) {
   const categoryName = button.getAttribute("data-category");
   const price = parseFloat(button.getAttribute("data-price"));
   const parentDiv = button.closest(".focus-item");
-  const isSingleSelect = categoriesData[categoryName].select === "singleSelect";
+  const category = categoriesData[categoryName];
+  const isSingleSelect = category.select === "singleSelect";
 
-  // Tıklama işlemini debounce edelim
   if (button.dataset.processing) return;
   button.dataset.processing = true;
 
   requestAnimationFrame(() => {
     if (button.classList.contains("selected")) {
       deselectItem(button, categoryName, price, parentDiv);
+      if (!category.parentCategory) {
+        // Ana kategori deselect edildiğinde alt kategorileri gizle
+        hideSubcategories(categoryName, categoriesData);
+      }
     } else {
       if (isSingleSelect && selectedItemsPerCategory[categoryName]) {
         const previousButton = selectedItemsPerCategory[categoryName];
@@ -186,12 +194,13 @@ function handleItemClick(button, categoriesData) {
         );
       }
       selectItem(button, categoryName, price, parentDiv);
+      if (!category.parentCategory) {
+        // Ana kategori seçildiğinde alt kategorileri render et
+        renderSubcategories(categoryName, categoriesData);
+      }
     }
 
-    // Sadece etkilenen kategorileri güncelle
-    const affectedCategories = getAffectedCategories(categoryName, categoriesData);
-    updateAffectedCategories(affectedCategories, categoriesData);
-    
+    updateAffectedCategories(getAffectedCategories(categoryName, categoriesData), categoriesData);
     updateTotalPrice();
     delete button.dataset.processing;
   });
