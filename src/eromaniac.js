@@ -18,39 +18,43 @@ async function initializeCategories() {
   }
 }
 
+
 // Render categories and products on the page
 function renderCategories(categoriesData) {
   for (const categoryName in categoriesData) {
     const category = categoriesData[categoryName];
-    categoryNames.push(categoryName);
-    tagFilters[categoryName] = [];
+    
+    // Sadece parentCategory'si boş veya olmayan kategorileri işle
+    if (!category.parentCategory || category.parentCategory === "") {
+      categoryNames.push(categoryName);
+      tagFilters[categoryName] = [];
 
-    // Kategori başlığı ve konteyner
-    categoriesDiv.innerHTML += `
-      <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
-      <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>`;
+      // Kategori başlığı ve konteyner
+      categoriesDiv.innerHTML += `
+        <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
+        <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>`;
 
-    // Sidebar butonu
-    sideMenu.insertAdjacentHTML(
-      "beforebegin",
-      `<div class="sidebar-item">
-        <button class="button-6" onclick="window.location='#${categoryName}Div'" id="${categoryName}__menu">${category.title}</button>
-      </div>`
-    );
+      // Sidebar butonu
+      sideMenu.insertAdjacentHTML(
+        "beforebegin",
+        `<div class="sidebar-item">
+          <button class="button-6" onclick="window.location='#${categoryName}Div'" id="${categoryName}__menu">${category.title}</button>
+        </div>`
+      );
 
-    const container = document.getElementById(categoryName);
-    const sortedItems = category.documents.sort((a, b) => a.order - b.order);
+      const container = document.getElementById(categoryName);
+      const sortedItems = category.documents.sort((a, b) => a.order - b.order);
 
-    // Ürünleri oluştur
-    sortedItems.forEach((item, index) => {
-      container.innerHTML += createItemHtml(categoryName, item, index);
-    });
+      // Ürünleri oluştur
+      sortedItems.forEach((item, index) => {
+        container.innerHTML += createItemHtml(categoryName, item, index);
+      });
 
-    // Filtreleri uygula
-    updateFilteredItems(categoryName, null);
+      // Filtreleri uygula
+      updateFilteredItems(categoryName, null);
+    }
   }
 }
-
 // Create product HTML
 function createItemHtml(categoryName, item, index) {
   const formattedPrice = (item.price / 1).toLocaleString("tr-TR");

@@ -1,27 +1,28 @@
-import { db } from './firebaseConfig'; // Firebase ayarlarını içeren dosya
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from "./firebaseConfig"; // Firebase ayarlarını içeren dosya
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
 let categoriesData = {}; // Kategorileri saklayacak
 
 // Kategorileri al
 async function getCategories() {
-  const cq = query(collection(db,"categories"),orderBy("order"))
-  // const categoriesRef = collection(db, 'categories');
+  const cq = query(collection(db, "categories"), orderBy("order"));
   const snapshot = await getDocs(cq);
-  return snapshot.docs.map(doc => ({
+  return snapshot.docs.map((doc) => ({
     id: doc.id,
-    select: doc.data().select, // Select özelliğini ekledik
+    select: doc.data().select,
+    parentCategory: doc.data().parentCategory, // parentCategory'yi ekleyin
     ...doc.data(),
   }));
 }
 
 async function getCategoriesTitles(categoryName) {
   try {
-    
     const categoriesSnapshot = await getDocs(collection(db, "categories"));
-    const categoriesTitles = categoriesSnapshot.docs.map(doc => doc.data().title);
+    const categoriesTitles = categoriesSnapshot.docs.map(
+      (doc) => doc.data().title
+    );
 
-    return categoriesTitles;  // Title'ları döndürüyoruz
+    return categoriesTitles; // Title'ları döndürüyoruz
   } catch (error) {
     console.error("Kategorilerden veriler alınırken hata oluştu:", error);
     return [];
@@ -32,7 +33,7 @@ async function getCategoriesTitles(categoryName) {
 async function getDocumentsInCategory(categoryName) {
   const categoryRef = collection(db, categoryName);
   const snapshot = await getDocs(categoryRef);
-  return snapshot.docs.map(doc => {
+  return snapshot.docs.map((doc) => {
     const data = doc.data();
     return {
       id: doc.id,
@@ -52,13 +53,14 @@ async function createCategoryObjects() {
       const documents = await getDocumentsInCategory(categoryName); // Dokümanları al
 
       categoriesData[categoryName] = {
-        title: categoriesTitles.find(title => title === category.title), // Başlığı ekle
-        select: category.select, // Select özelliğini ekledik
-        documents: documents.map(doc => ({
+        title: categoriesTitles.find((title) => title === category.title),
+        select: category.select,
+        parentCategory: category.parentCategory, // parentCategory'yi ekleyin
+        documents: documents.map((doc) => ({
           id: doc.id,
           ...doc,
         })),
-      };      
+      };
     }
 
     console.log(categoriesData); // Tüm kategorileri burada görebilirsin
