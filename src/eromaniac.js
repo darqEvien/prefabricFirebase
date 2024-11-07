@@ -7,11 +7,11 @@ let selectedItemsPerCategory = {};
 let tagFilters = {}; // To hold tags for all categories
 let categoryNames = [];
 let selectedTagsPerCategory = {}; // Seçilen etiketleri saklamak için eklenen nesne
-
+let categoriesData = {};
 // Initialize categories
 async function initializeCategories() {
   try {
-    const categoriesData = await fetchCategoriesData();
+    categoriesData = await fetchCategoriesData();
     renderCategories(categoriesData);
     addEventListeners(categoriesData);
   } catch (error) {
@@ -163,15 +163,12 @@ function addEventListeners(categoriesData) {
   });
 }
 
-// Handle item selection or deselection
-
-
-function handleItemClick(button, categoriesData) {
+function handleItemClick(button) {
   const categoryName = button.getAttribute("data-category");
   const price = parseFloat(button.getAttribute("data-price"));
   const parentDiv = button.closest(".focus-item");
   const category = categoriesData[categoryName];
-  const isSingleSelect = category.select === "singleSelect";
+  const isSingleSelect = category && category.select === "singleSelect";
 
   if (button.dataset.processing) return;
   button.dataset.processing = true;
@@ -179,10 +176,6 @@ function handleItemClick(button, categoriesData) {
   requestAnimationFrame(() => {
     if (button.classList.contains("selected")) {
       deselectItem(button, categoryName, price, parentDiv);
-      if (!category.parentCategory) {
-        // Ana kategori deselect edildiğinde alt kategorileri gizle
-        hideSubcategories(categoryName, categoriesData);
-      }
     } else {
       if (isSingleSelect && selectedItemsPerCategory[categoryName]) {
         const previousButton = selectedItemsPerCategory[categoryName];
@@ -192,10 +185,14 @@ function handleItemClick(button, categoriesData) {
           parseFloat(previousButton.getAttribute("data-price")),
           previousButton.closest(".focus-item")
         );
+
+        // Ana kategori değiştiğinde alt kategorilerdeki seçimleri sıfırla
+        if (!category.parentCategory) {
+          clearSubcategorySelections(categoryName);
+        }
       }
       selectItem(button, categoryName, price, parentDiv);
-      if (!category.parentCategory) {
-        // Ana kategori seçildiğinde alt kategorileri render et
+      if (category && !category.parentCategory) {
         renderSubcategories(categoryName, categoriesData);
       }
     }
@@ -205,17 +202,45 @@ function handleItemClick(button, categoriesData) {
     delete button.dataset.processing;
   });
 }
+function clearSubcategorySelections(parentCategoryName) {
+  Object.keys(categoriesData).forEach(categoryName => {
+    if (categoriesData[categoryName].parentCategory === parentCategoryName) {
+      const selectedButton = selectedItemsPerCategory[categoryName];
+      if (selectedButton) {
+        const price = parseFloat(selectedButton.getAttribute("data-price"));
+        // Sadece görsel ve seçim durumunu güncelle, fiyatı düşür
+        selectedButton.classList.remove("selected");
+        selectedButton.closest(".focus-item").classList.remove("selected");
+        removeSelectedPrice(price);
+        delete selectedItemsPerCategory[categoryName];
+        delete selectedTagsPerCategory[categoryName];
+      }
+    }
+  });
+}
 // Select item
 
 function getAffectedCategories(categoryName, categoriesData) {
   const affected = new Set();
-  const categoryIndex = categoryNames.indexOf(categoryName);
-  
-  // Sadece seçilen kategoriden sonraki kategorileri ekle
-  for (let i = categoryIndex + 1; i < categoryNames.length; i++) {
-    affected.add(categoryNames[i]);
+  const category = categoriesData[categoryName];
+
+  if (category.parentCategory) {
+    // Alt kategori ise, kendisini ve kardeş kategorilerini ekle
+    Object.keys(categoriesData).forEach(cat => {
+      if (categoriesData[cat].parentCategory === category.parentCategory) {
+        affected.add(cat);
+      }
+    });
+  } else {
+    // Ana kategori ise, kendisini ve alt kategorilerini ekle
+    affected.add(categoryName);
+    Object.keys(categoriesData).forEach(cat => {
+      if (categoriesData[cat].parentCategory === categoryName) {
+        affected.add(cat);
+      }
+    });
   }
-  
+
   return Array.from(affected);
 }
 
@@ -225,18 +250,21 @@ function updateAffectedCategories(categories, categoriesData) {
     if (!container) return;
 
     const items = container.querySelectorAll('.focus-item');
-    const initialCategoryName = Object.keys(selectedTagsPerCategory)[0];
-    const initialTags = selectedTagsPerCategory[initialCategoryName] || [];
+    const selectedParentCategory = Object.keys(selectedTagsPerCategory).find(cat => 
+      !categoriesData[cat].parentCategory && categoriesData[categoryName].parentCategory === cat
+    );
 
     items.forEach(item => {
-      const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
-      const hasMatchingTag = initialTags.length === 0 || 
-                            itemTags.some(tag => initialTags.includes(tag));
-      
-      // DOM'u sadece gerektiğinde güncelle
-      const shouldBeVisible = hasMatchingTag ? "grid" : "none";
-      if (item.style.display !== shouldBeVisible) {
-        item.style.display = shouldBeVisible;
+      if (selectedParentCategory) {
+        const itemTags = item.getAttribute("data-tag").split(',').map(t => t.trim());
+        const parentTags = selectedTagsPerCategory[selectedParentCategory] || [];
+        const hasMatchingTag = parentTags.length === 0 || 
+                               itemTags.some(tag => parentTags.includes(tag));
+        
+        item.style.display = hasMatchingTag ? "grid" : "none";
+      } else {
+        // Eğer ana kategoride seçim yoksa, tüm ürünleri göster
+        item.style.display = "grid";
       }
     });
   });
@@ -258,11 +286,17 @@ function deselectItem(button, categoryName, price, parentDiv) {
     button.classList.remove("selected");
     parentDiv.classList.remove("selected");
     removeSelectedPrice(price);
-    selectedItemsPerCategory[categoryName] = null;
+    delete selectedItemsPerCategory[categoryName];
     delete selectedTagsPerCategory[categoryName];
+
+    const category = categoriesData[categoryName];
+    if (category && !category.parentCategory) {
+      hideSubcategories(categoryName, categoriesData);
+    }
+
+    updateAffectedCategories(getAffectedCategories(categoryName, categoriesData), categoriesData);
   }
 }
-
 // Toggle item selection
 function toggleItemSelection(button, parentDiv, isSelected) {
   button.classList.toggle("selected", isSelected);
@@ -272,20 +306,15 @@ function toggleItemSelection(button, parentDiv, isSelected) {
 // Remove selected price
 function removeSelectedPrice(price) {
   const index = selectedPrices.indexOf(price);
-  if (index > -1) selectedPrices.splice(index, 1);
+  if (index > -1) {
+    selectedPrices.splice(index, 1);
+  }
 }
-
 // Update total price
-const updateTotalPrice = (() => {
-  let frameRequest;
-  return () => {
-    if (frameRequest) cancelAnimationFrame(frameRequest);
-    frameRequest = requestAnimationFrame(() => {
-      const total = selectedPrices.reduce((acc, curr) => acc + curr, 0);
-      document.getElementById("total").textContent = `${total.toLocaleString()}₺`;
-    });
-  };
-})();
+function updateTotalPrice() {
+  const total = selectedPrices.reduce((acc, curr) => acc + curr, 0);
+  document.getElementById("total").textContent = `${total.toLocaleString()}₺`;
+}
 
 // Update tag filters
 function updateTagFilters(categoryName, tag, isRemoving = false) {
