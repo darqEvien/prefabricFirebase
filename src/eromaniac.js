@@ -415,7 +415,7 @@ function selectItem(button, categoryName, mainCategory) {
       const formattedCalculatedPrice = calculatedPrice.toLocaleString("tr-TR");
       priceElement.textContent = `Fiyat: ${formattedCalculatedPrice}₺ (${formattedBasePrice}₺/m²)`;
     } else if (category.priceFormat === 'cevre') {
-      calculatedPrice = basePrice * currentPerimeter;
+      calculatedPrice = basePrice * (2 * (width + height));
     } else {
       calculatedPrice = basePrice;
     }
