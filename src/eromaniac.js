@@ -9,13 +9,22 @@ let categoryNames = [];
 let selectedTagsPerCategory = {}; // Seçilen etiketleri saklamak için eklenen nesne
 let categoriesData = {};
 let dimensionsPerCategory = {};
-let selectedWidth = 0;
-let selectedHeight = 0;
+let categoryTotals = {};
 
 // Initialize categories
 async function initializeCategories() {
   try {
     categoriesData = await fetchCategoriesData();
+    Object.entries(categoriesData).forEach(([categoryName, category]) => {
+      if (!category.parentCategory) { // Ana kategori ise
+        categoryTotals[categoryName] = {
+          price: 0,
+          width: 0,
+          height: 0,
+          items: []
+        };
+      }
+    });
     renderCategories(categoriesData);
     addEventListeners(categoriesData);
     
@@ -137,24 +146,26 @@ function hideSubcategoriesRecursively(categoryName, categoriesData) {
     .filter(([_, category]) => category.parentCategory === categoryName);
 
   subcategories.forEach(([subCategoryName, _]) => {
-    // Alt kategorinin containerını kaldır
     const subContainer = document.getElementById(`${subCategoryName}_container`);
     if (subContainer) {
       subContainer.remove();
     }
 
-    // Seçili öğeyi temizle
     if (selectedItemsPerCategory[subCategoryName]) {
       const selectedButton = selectedItemsPerCategory[subCategoryName];
-      deselectItem(
-        selectedButton,
-        subCategoryName,
-        parseFloat(selectedButton.getAttribute("data-price")),
-        selectedButton.closest(".focus-item")
-      );
+      const mainCategory = getMainCategory(subCategoryName, categoriesData);
+      
+      if (mainCategory) {
+        deselectItem(selectedButton, subCategoryName, mainCategory);
+      } else {
+        // Ana kategori bulunamadıysa sadece seçimi kaldır
+        selectedButton.classList.remove("selected");
+        selectedButton.closest(".focus-item")?.classList.remove("selected");
+        delete selectedItemsPerCategory[subCategoryName];
+        delete selectedTagsPerCategory[subCategoryName];
+      }
     }
 
-    // Recursive olarak alt kategorilerin alt kategorilerini de gizle
     hideSubcategoriesRecursively(subCategoryName, categoriesData);
   });
 }
@@ -196,47 +207,34 @@ function addEventListeners(categoriesData) {
 }
 function handleItemClick(button, categoriesData) {
   const categoryName = button.getAttribute("data-category");
-  const price = parseFloat(button.getAttribute("data-price"));
-  const parentDiv = button.closest(".focus-item");
-  const width = parseFloat(button.getAttribute("data-width")) || 0;
-  const height = parseFloat(button.getAttribute("data-height")) || 0;
+  const mainCategory = getMainCategory(categoryName, categoriesData);
   
-  if (button.dataset.processing) return;
+  if (!mainCategory || button.dataset.processing) return;
   button.dataset.processing = true;
 
   requestAnimationFrame(() => {
     if (button.classList.contains("selected")) {
-      // Seçimi kaldırma
-      deselectItem(button, categoryName, price, parentDiv);
+      deselectItem(button, categoryName, mainCategory);
       hideSubcategoriesRecursively(categoryName, categoriesData);
-      updateSelectedDimensions(categoryName, false, width, height);
     } else {
-      // Aynı kategorideki mevcut seçili öğeyi kontrol et
       const currentSelected = selectedItemsPerCategory[categoryName];
       if (currentSelected) {
-        const currentWidth = parseFloat(currentSelected.getAttribute("data-width")) || 0;
-        const currentHeight = parseFloat(currentSelected.getAttribute("data-height")) || 0;
-        updateSelectedDimensions(categoryName, false, currentWidth, currentHeight);
-        
-        deselectItem(
-          currentSelected,
-          categoryName,
-          parseFloat(currentSelected.getAttribute("data-price")),
-          currentSelected.closest(".focus-item")
-        );
+        deselectItem(currentSelected, categoryName, mainCategory);
         hideSubcategoriesRecursively(categoryName, categoriesData);
       }
 
-      selectItem(button, categoryName, price, parentDiv);
+      selectItem(button, categoryName, mainCategory);
       renderSubcategoriesRecursively(categoryName, categoriesData);
-      updateSelectedDimensions(categoryName, true, width, height);
     }
 
     updateAffectedCategories(getAffectedCategories(categoryName, categoriesData), categoriesData);
     updateTotalPrice();
+    logCategoryTotals();
     delete button.dataset.processing;
   });
 }
+
+
 function clearSubcategorySelections(parentCategoryName) {
   Object.keys(categoriesData).forEach(categoryName => {
     if (categoriesData[categoryName].parentCategory === parentCategoryName) {
@@ -304,25 +302,110 @@ function updateAffectedCategories(categories, categoriesData) {
     });
   });
 }
-function selectItem(button, categoryName, price, parentDiv) {
+function selectItem(button, categoryName, mainCategory) {
   if (!button.classList.contains("selected")) {
+    const price = parseFloat(button.getAttribute("data-price")) || 0;
+    const width = parseFloat(button.getAttribute("data-width")) || 0;
+    const height = parseFloat(button.getAttribute("data-height")) || 0;
+    const parentDiv = button.closest(".focus-item");
+
     button.classList.add("selected");
     parentDiv.classList.add("selected");
-    selectedPrices.push(price);
+    
+    categoryTotals[mainCategory].price += price;
+    categoryTotals[mainCategory].width += width;
+    categoryTotals[mainCategory].height += height;
+    categoryTotals[mainCategory].items.push({
+      categoryName,
+      price,
+      width,
+      height,
+      button
+    });
+
     selectedItemsPerCategory[categoryName] = button;
     const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
     selectedTagsPerCategory[categoryName] = tags;
   }
 }
 // Deselect item
-function deselectItem(button, categoryName, price, parentDiv) {
+function deselectItem(button, categoryName, mainCategory) {
+  // mainCategory kontrolü ekleyelim
+  if (!mainCategory || !categoryTotals[mainCategory]) {
+    console.warn(`Ana kategori bulunamadı: ${mainCategory}`);
+    return;
+  }
+
   if (button.classList.contains("selected")) {
+    const price = parseFloat(button.getAttribute("data-price")) || 0;
+    const width = parseFloat(button.getAttribute("data-width")) || 0;
+    const height = parseFloat(button.getAttribute("data-height")) || 0;
+    const parentDiv = button.closest(".focus-item");
+
     button.classList.remove("selected");
     parentDiv.classList.remove("selected");
-    removeSelectedPrice(price);
+
+    // Güvenli erişim için kontrol ekleyelim
+    if (categoryTotals[mainCategory]) {
+      categoryTotals[mainCategory].price -= price;
+      categoryTotals[mainCategory].width -= width;
+      categoryTotals[mainCategory].height -= height;
+      categoryTotals[mainCategory].items = categoryTotals[mainCategory].items
+        .filter(item => item.categoryName !== categoryName);
+    }
+
     delete selectedItemsPerCategory[categoryName];
     delete selectedTagsPerCategory[categoryName];
   }
+}
+function getMainCategory(categoryName, categoriesData) {
+  if (!categoryName || !categoriesData[categoryName]) {
+    console.warn(`Geçersiz kategori: ${categoryName}`);
+    return null;
+  }
+
+  const category = categoriesData[categoryName];
+  
+  if (!category.parentCategory) {
+    return categoryName;
+  }
+  
+  // Sonsuz döngü kontrolü ekleyelim
+  let maxDepth = 10; // Maksimum derinlik kontrolü
+  let currentCategory = category;
+  let currentName = categoryName;
+  
+  while (currentCategory.parentCategory && maxDepth > 0) {
+    currentName = currentCategory.parentCategory;
+    currentCategory = categoriesData[currentName];
+    if (!currentCategory) break;
+    maxDepth--;
+  }
+
+  return !currentCategory?.parentCategory ? currentName : null;
+}
+
+// Toplamları güncelle ve görüntüle
+function updateCategoryTotals() {
+  Object.entries(categoryTotals).forEach(([mainCategory, totals]) => {
+    // Her ana kategori için toplam değerleri güncelle
+    const totalDiv = document.getElementById(`${mainCategory}-totals`);
+    if (totalDiv) {
+      totalDiv.innerHTML = `
+        <h3>${categoriesData[mainCategory].title} Toplamları:</h3>
+        <p>Fiyat: ${totals.price.toLocaleString()}₺</p>
+        <p>Genişlik: ${totals.width.toFixed(2)}m</p>
+        <p>Yükseklik: ${totals.height.toFixed(2)}m</p>
+      `;
+    }
+  });
+
+  // Genel toplamı da gösterebiliriz
+  const grandTotal = Object.values(categoryTotals).reduce(
+    (acc, curr) => acc + curr.price,
+    0
+  );
+  document.getElementById("total").textContent = `${grandTotal.toLocaleString()}₺`;
 }
 // Toggle item selection
 function toggleItemSelection(button, parentDiv, isSelected) {
@@ -339,8 +422,14 @@ function removeSelectedPrice(price) {
 }
 // Update total price
 function updateTotalPrice() {
-  const total = selectedPrices.reduce((acc, curr) => acc + curr, 0);
-  document.getElementById("total").textContent = `${total.toLocaleString()}₺`;
+  const grandTotal = Object.values(categoryTotals).reduce(
+    (acc, curr) => acc + curr.price,
+    0
+  );
+  document.getElementById("total").textContent = `${grandTotal.toLocaleString()}₺`;
+}
+function logCategoryTotals() {
+  console.log("Category Totals:", categoryTotals);
 }
 
 // Update tag filters
