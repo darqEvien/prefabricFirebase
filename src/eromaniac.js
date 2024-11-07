@@ -69,7 +69,65 @@ function renderCategory(categoryName, category) {
 }
 
 // Alt kategorileri render eden fonksiyon
-function renderSubcategories(parentCategoryName, categoriesData) {
+// function renderSubcategories(parentCategoryName, categoriesData) {
+//   const parentContainer = document.getElementById(`${parentCategoryName}_container`);
+//   if (!parentContainer) return;
+
+//   // Mevcut alt kategorileri temizle
+//   const existingSubcategories = document.querySelectorAll(`[data-parent="${parentCategoryName}"]`);
+//   existingSubcategories.forEach(el => el.remove());
+
+//   // Ana kategoride seçilen ürünün tag'lerini al
+//   const selectedParentItem = selectedItemsPerCategory[parentCategoryName];
+//   let selectedParentTags = [];
+//   if (selectedParentItem) {
+//     const parentDiv = selectedParentItem.closest('.focus-item');
+//     selectedParentTags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
+//   }
+
+//   // Alt kategorileri filtrele ve sırala
+//   const subcategories = Object.entries(categoriesData)
+//     .filter(([_, category]) => category.parentCategory === parentCategoryName)
+//     .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+
+//   // Alt kategorileri sırayla ekle
+//   subcategories.forEach(([categoryName, category]) => {
+//     const subcategoryHTML = `
+//       <div class="subcategory-container" id="${categoryName}_container" data-parent="${parentCategoryName}">
+//         <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
+//         <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+//       </div>
+//     `;
+    
+//     parentContainer.insertAdjacentHTML('beforeend', subcategoryHTML);
+
+//     const container = document.getElementById(categoryName);
+//     let sortedItems = category.documents.sort((a, b) => a.order - b.order);
+
+//     // Ana kategoride bir ürün seçilmişse, alt kategori ürünlerini filtrele
+//     if (selectedParentTags.length > 0) {
+//       sortedItems = sortedItems.filter(item => 
+//         item.tag && selectedParentTags.some(tag => item.tag.includes(tag))
+//       );
+//     }
+    
+//     const itemsHTML = sortedItems.map((item, index) => 
+//       createItemHtml(categoryName, item, index)
+//     ).join('');
+    
+//     container.innerHTML = itemsHTML;
+//   });
+
+//   addEventListeners(categoriesData);
+// }
+
+function renderSubcategoriesRecursively(parentCategoryName, categoriesData) {
+  const subcategories = Object.entries(categoriesData)
+    .filter(([_, category]) => category.parentCategory === parentCategoryName)
+    .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+
+  if (subcategories.length === 0) return;
+
   const parentContainer = document.getElementById(`${parentCategoryName}_container`);
   if (!parentContainer) return;
 
@@ -77,42 +135,37 @@ function renderSubcategories(parentCategoryName, categoriesData) {
   const existingSubcategories = document.querySelectorAll(`[data-parent="${parentCategoryName}"]`);
   existingSubcategories.forEach(el => el.remove());
 
-  // Ana kategoride seçilen ürünün tag'lerini al
-  const selectedParentItem = selectedItemsPerCategory[parentCategoryName];
-  let selectedParentTags = [];
-  if (selectedParentItem) {
-    const parentDiv = selectedParentItem.closest('.focus-item');
-    selectedParentTags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
-  }
-
-  // Alt kategorileri filtrele ve sırala
-  const subcategories = Object.entries(categoriesData)
-    .filter(([_, category]) => category.parentCategory === parentCategoryName)
-    .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
-
-  // Alt kategorileri sırayla ekle
-  subcategories.forEach(([categoryName, category]) => {
-    const subcategoryHTML = `
-      <div class="subcategory-container" id="${categoryName}_container" data-parent="${parentCategoryName}">
-        <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
-        <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+  // Alt kategorileri render et
+  subcategories.forEach(([subCategoryName, subCategory]) => {
+    const subCategoryHTML = `
+      <div class="subcategory-container" id="${subCategoryName}_container" data-parent="${parentCategoryName}">
+        <h3 id="${subCategoryName}__title">${subCategory.title || "Select"} Seçiniz</h3>
+        <div id="${subCategoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
       </div>
     `;
     
-    parentContainer.insertAdjacentHTML('beforeend', subcategoryHTML);
+    parentContainer.insertAdjacentHTML('beforeend', subCategoryHTML);
 
-    const container = document.getElementById(categoryName);
-    let sortedItems = category.documents.sort((a, b) => a.order - b.order);
+    const container = document.getElementById(subCategoryName);
+    if (!container) return;
 
-    // Ana kategoride bir ürün seçilmişse, alt kategori ürünlerini filtrele
-    if (selectedParentTags.length > 0) {
-      sortedItems = sortedItems.filter(item => 
-        item.tag && selectedParentTags.some(tag => item.tag.includes(tag))
-      );
+    let sortedItems = subCategory.documents.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    // Tag filtrelemesi
+    const selectedParentItem = selectedItemsPerCategory[parentCategoryName];
+    if (selectedParentItem) {
+      const parentDiv = selectedParentItem.closest('.focus-item');
+      const selectedParentTags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
+      
+      if (selectedParentTags.length > 0) {
+        sortedItems = sortedItems.filter(item => 
+          item.tag && selectedParentTags.some(tag => item.tag.includes(tag))
+        );
+      }
     }
-    
+
     const itemsHTML = sortedItems.map((item, index) => 
-      createItemHtml(categoryName, item, index)
+      createItemHtml(subCategoryName, item, index)
     ).join('');
     
     container.innerHTML = itemsHTML;
@@ -120,12 +173,36 @@ function renderSubcategories(parentCategoryName, categoriesData) {
 
   addEventListeners(categoriesData);
 }
-
-
 function hideSubcategories(parentCategoryName, categoriesData) {
   const subcategories = document.querySelectorAll(`[data-parent="${parentCategoryName}"]`);
   subcategories.forEach(subcategory => {
     subcategory.remove();
+  });
+}
+function hideSubcategoriesRecursively(categoryName, categoriesData) {
+  const subcategories = Object.entries(categoriesData)
+    .filter(([_, category]) => category.parentCategory === categoryName);
+
+  subcategories.forEach(([subCategoryName, _]) => {
+    // Alt kategorinin containerını kaldır
+    const subContainer = document.getElementById(`${subCategoryName}_container`);
+    if (subContainer) {
+      subContainer.remove();
+    }
+
+    // Seçili öğeyi temizle
+    if (selectedItemsPerCategory[subCategoryName]) {
+      const selectedButton = selectedItemsPerCategory[subCategoryName];
+      deselectItem(
+        selectedButton,
+        subCategoryName,
+        parseFloat(selectedButton.getAttribute("data-price")),
+        selectedButton.closest(".focus-item")
+      );
+    }
+
+    // Recursive olarak alt kategorilerin alt kategorilerini de gizle
+    hideSubcategoriesRecursively(subCategoryName, categoriesData);
   });
 }
 // Create product HTML
@@ -162,39 +239,37 @@ function addEventListeners(categoriesData) {
     button.addEventListener("click", () => handleItemClick(button, categoriesData));
   });
 }
-
-function handleItemClick(button) {
+function handleItemClick(button, categoriesData) {
   const categoryName = button.getAttribute("data-category");
   const price = parseFloat(button.getAttribute("data-price"));
   const parentDiv = button.closest(".focus-item");
-  const category = categoriesData[categoryName];
-  const isSingleSelect = category && category.select === "singleSelect";
-
+  
   if (button.dataset.processing) return;
   button.dataset.processing = true;
 
   requestAnimationFrame(() => {
     if (button.classList.contains("selected")) {
       deselectItem(button, categoryName, price, parentDiv);
+      // Seçimi kaldırılan öğenin ve alt kategorilerinin tümünü gizle
+      hideSubcategoriesRecursively(categoryName, categoriesData);
     } else {
-      if (isSingleSelect && selectedItemsPerCategory[categoryName]) {
-        const previousButton = selectedItemsPerCategory[categoryName];
+      // Aynı kategorideki diğer seçili öğeleri kaldır
+      const currentSelected = selectedItemsPerCategory[categoryName];
+      if (currentSelected) {
         deselectItem(
-          previousButton,
+          currentSelected,
           categoryName,
-          parseFloat(previousButton.getAttribute("data-price")),
-          previousButton.closest(".focus-item")
+          parseFloat(currentSelected.getAttribute("data-price")),
+          currentSelected.closest(".focus-item")
         );
+        // Önceki seçimin alt kategorilerini gizle
+        hideSubcategoriesRecursively(categoryName, categoriesData);
+      }
 
-        // Ana kategori değiştiğinde alt kategorilerdeki seçimleri sıfırla
-        if (!category.parentCategory) {
-          clearSubcategorySelections(categoryName);
-        }
-      }
       selectItem(button, categoryName, price, parentDiv);
-      if (category && !category.parentCategory) {
-        renderSubcategories(categoryName, categoriesData);
-      }
+      
+      // Seçilen öğenin alt kategorilerini render et
+      renderSubcategoriesRecursively(categoryName, categoriesData);
     }
 
     updateAffectedCategories(getAffectedCategories(categoryName, categoriesData), categoriesData);
@@ -288,13 +363,6 @@ function deselectItem(button, categoryName, price, parentDiv) {
     removeSelectedPrice(price);
     delete selectedItemsPerCategory[categoryName];
     delete selectedTagsPerCategory[categoryName];
-
-    const category = categoriesData[categoryName];
-    if (category && !category.parentCategory) {
-      hideSubcategories(categoryName, categoriesData);
-    }
-
-    updateAffectedCategories(getAffectedCategories(categoryName, categoriesData), categoriesData);
   }
 }
 // Toggle item selection
