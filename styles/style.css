@@ -235,7 +235,6 @@ body {
 }
 
 .content__ort {
-
   max-height: 140px;
 }
 
@@ -248,3 +247,31 @@ body {
   margin-bottom: 30px;
 }
 
+#user-input-section {
+  margin-bottom: 20px;
+}
+
+#user-input-section label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+#user-input-section input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+#selected-products-section {
+  margin-top: 20px;
+}
+
+#selected-products div {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+
+#selected-products img {
+  margin-right: 10px;
+}

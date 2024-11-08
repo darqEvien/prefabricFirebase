@@ -178,7 +178,12 @@ function createItemHtml(categoryName, item, index) {
   if (category.priceFormat === 'metrekare') {
     const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
     priceDisplay = `${formattedBasePrice}₺/m²`;
-  } else {
+  } 
+  else if(category.priceFormat === 'artis'){
+    const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
+    priceDisplay = `${formattedBasePrice}₺/m²`;
+  }
+  else {
     const formattedPrice = (item.price / 1).toLocaleString("tr-TR");
     priceDisplay = `${formattedPrice}₺`;
   }
@@ -285,16 +290,33 @@ function updateAllPrices(mainCategory) {
   const totalArea = categoryTotals[mainCategory].area;
   const currentPerimeter = (categoryTotals[mainCategory].width + categoryTotals[mainCategory].height) * 2;
 
+  // Ana kategorinin toplam fiyatını sıfırla
   categoryTotals[mainCategory].price = 0;
 
+  // Her bir öğe için fiyat hesapla
   categoryTotals[mainCategory].items.forEach(item => {
     const category = categoriesData[item.categoryName];
-    if (category.priceFormat === 'metrekare') {
-      item.price = item.basePrice * totalArea;
-    } else if (category.priceFormat === 'cevre') {
-      item.price = item.basePrice * currentPerimeter;
+    let calculatedPrice;
+
+    // Fiyat formatına göre hesaplama yap
+    switch (category.priceFormat) {
+      case 'metrekare':
+        calculatedPrice = item.basePrice * totalArea;
+        break;
+      case 'cevre':
+        calculatedPrice = item.basePrice * currentPerimeter;
+        break;
+      case 'artis':
+        // Artış fiyat hesaplama
+        calculatedPrice = (item.basePrice * totalArea) - (categoryTotals[mainCategory].items.length > 0 ? categoryTotals[mainCategory].items[0].price : 0);
+        break;
+      default:
+        calculatedPrice = item.basePrice; // Diğer türler için basePrice kullan
+        break;
     }
-    categoryTotals[mainCategory].price += item.price;
+
+    // Toplam fiyatı güncelle
+    categoryTotals[mainCategory].price += calculatedPrice; // Burada calculatedPrice kullanmalıyız
   });
 
   // Alt kategorilerdeki tüm ürünlerin fiyat gösterimini güncelle
@@ -308,35 +330,23 @@ function updateAllPrices(mainCategory) {
           const priceElement = item.querySelector('.sizes__paragh');
           const button = item.querySelector('.proButs');
           const basePrice = parseFloat(button.getAttribute("data-price")) || 0;
-          
-          // Seçili olup olmadığını kontrol et
-          const isSelected = button.classList.contains("selected");
-          
-          if (category.priceFormat === 'metrekare') {
-            if (isSelected) {
-              // Seçili ise hesaplanmış fiyatı ve birim fiyatı göster
-              const calculatedPrice = basePrice * totalArea;
-              const formattedBasePrice = basePrice.toLocaleString("tr-TR");
-              const formattedCalculatedPrice = calculatedPrice.toLocaleString("tr-TR");
-              priceElement.textContent = `Fiyat: ${formattedCalculatedPrice}₺ (${formattedBasePrice}₺/m²)`;
-            } else {
-              // Seçili değilse sadece birim fiyatı göster
-              const formattedBasePrice = basePrice.toLocaleString("tr-TR");
-              priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/m²`;
-            }
-          } else if (category.priceFormat === 'cevre') {
-            const calculatedPrice = basePrice * currentPerimeter;
-            const formattedPrice = calculatedPrice.toLocaleString("tr-TR");
-            priceElement.textContent = `Fiyat: ${formattedPrice}₺`;
+
+          // Fiyat formatına göre gösterim yap
+          if (category.priceFormat === 'artış') {
+            const calculatedPrice = (basePrice * totalArea) - (categoryTotals[mainCategory].items.length > 0 ? categoryTotals[mainCategory].items[0].price : 0);
+            priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString("tr-TR")}₺`;
+          } else if (category.priceFormat === 'metrekare') {
+            const calculatedPrice = basePrice * totalArea;
+            priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString("tr-TR")}₺ (${basePrice.toLocaleString("tr-TR")}₺/m²)`;
           } else {
-            const formattedPrice = basePrice.toLocaleString("tr-TR");
-            priceElement.textContent = `Fiyat: ${formattedPrice}₺`;
+            priceElement.textContent = `Fiyat: ${basePrice.toLocaleString("tr-TR")}₺`;
           }
         });
       }
     }
   });
 
+  // Toplam fiyatı güncelle
   updateTotalPrice();
 }
 
@@ -366,29 +376,37 @@ function updateAffectedCategories(categories, categoriesData) {
   });
 }
 function calculatePrice(item, category, mainCategory) {
-  const basePrice = parseFloat(item.price) || 0;
-  let width, height;
+  const width = category.parentCategory 
+    ? categoryTotals[mainCategory]?.width || 1 
+    : (parseFloat(item.width) || 0) === 0 ? 1 : parseFloat(item.width);
+    
+  const height = category.parentCategory 
+    ? categoryTotals[mainCategory]?.height || 1 
+    : (parseFloat(item.height) || 0) === 0 ? 1 : parseFloat(item.height);
 
-  if (category.parentCategory) {
-    // Alt kategori için ana kategorinin boyutlarını kullan
-    width = categoryTotals[mainCategory]?.width || 1;
-    height = categoryTotals[mainCategory]?.height || 1;
-  } else {
-    // Ana kategori için kendi boyutlarını kullan
-    width = (parseFloat(item.width) || 0) === 0 ? 1 : parseFloat(item.width);
-    height = (parseFloat(item.height) || 0) === 0 ? 1 : parseFloat(item.height);
-  }
+  let calculatedPrice;
 
   switch (category.priceFormat) {
     case 'tekil':
-      return basePrice;
+      return 0; // Tekil fiyat görünmeyecek
     case 'metrekare':
-      return basePrice * (width * height);
+      calculatedPrice = item.price * (width * height);
+      break;
     case 'cevre':
-      return basePrice * ((width + height) * 2);
+      calculatedPrice = item.price * ((width + height) * 2);
+      break;
+    case 'artis':
+      // Artış fiyat hesaplama
+      calculatedPrice = item.price * (width * height);
+      const firstItemPrice = categoryTotals[mainCategory].items.length > 0 
+        ? categoryTotals[mainCategory].items[0].price 
+        : 0;
+      return (calculatedPrice - firstItemPrice); // İlk öğenin fiyatını çıkart
     default:
-      return basePrice;
+      return 0; // Diğer durumlarda 0 döndür
   }
+
+  return calculatedPrice; // Diğer hesaplama türleri için hesaplanan fiyatı döndür
 }
 function selectItem(button, categoryName, mainCategory) {
   if (!button.classList.contains("selected")) {
@@ -487,7 +505,18 @@ function deselectItem(button, categoryName, mainCategory) {
     // Fiyat gösterimini güncelle
     const priceElement = button.closest('.focus-item').querySelector('.sizes__paragh');
     const formattedBasePrice = basePrice.toLocaleString("tr-TR");
-    priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/m²`; // Sadece "X₺/m²" formatında göster
+
+    // Fiyat formatına göre farklı gösterim
+    switch(category.priceFormat) {
+      case 'metrekare':
+        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/m²`;
+        break;
+      case 'cevre':
+        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/çevre`;
+        break;
+      default: // 'tekil' veya diğer formatlar
+        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺`;
+    }
 
     // Tüm fiyatları güncelle
     updateAllPrices(mainCategory);
@@ -707,5 +736,6 @@ function updateSubcategoryPrices(parentCategoryName) {
     }
   });
 }
+
 // Initialize categories on page load
 document.addEventListener("DOMContentLoaded", initializeCategories);
