@@ -314,6 +314,7 @@ function updateAllPrices(mainCategory) {
         calculatedPrice = item.basePrice; // Diğer türler için basePrice kullan
         break;
     }
+    
 
     // Toplam fiyatı güncelle
     categoryTotals[mainCategory].price += calculatedPrice; // Burada calculatedPrice kullanmalıyız
@@ -332,7 +333,7 @@ function updateAllPrices(mainCategory) {
           const basePrice = parseFloat(button.getAttribute("data-price")) || 0;
 
           // Fiyat formatına göre gösterim yap
-          if (category.priceFormat === 'artış') {
+          if (category.priceFormat === 'artis') {
             const calculatedPrice = (basePrice * totalArea) - (categoryTotals[mainCategory].items.length > 0 ? categoryTotals[mainCategory].items[0].price : 0);
             priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString("tr-TR")}₺`;
           } else if (category.priceFormat === 'metrekare') {
