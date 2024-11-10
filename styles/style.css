@@ -314,8 +314,11 @@ html, body {
   padding: 10px;
   border-radius: 5px;
 }
-.sonuc__details{
+.sonuc__details, .sonuc__details summary{
   font-weight: bold;
   cursor: pointer;
   display: flex;
+}
+.left-side .product-item .product-image{
+  width: 15rem;
 }
