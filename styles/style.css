@@ -314,3 +314,8 @@ html, body {
   padding: 10px;
   border-radius: 5px;
 }
+.sonuc__details{
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+}

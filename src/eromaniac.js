@@ -466,6 +466,7 @@ function selectItem(button, categoryName, mainCategory) {
       calculatedPrice = basePrice;
     }
     
+   
     button.classList.add("selected");
     parentDiv.classList.add("selected");
 
@@ -807,28 +808,23 @@ function updateSelectedProductsDisplay() {
       const rightSide = document.createElement("div");
       rightSide.classList.add("right-side");
 
-      const categoryTitle = document.createElement("h2");
-      categoryTitle.textContent = totals.title || mainCategory; // Ana kategori başlığı
-      rightSide.appendChild(categoryTitle);
-
       // Alt kategorilerin isimlerini ve detaylarını gösteren bir bölüm oluşturun
       totals.items.forEach(item => {
         const detailsDiv = document.createElement("details");
         const summary = document.createElement("summary");
-        summary.textContent = item.title; // Alt kategori başlığı
+        summary.textContent = `${item.title} - Fiyat: ${item.price.toLocaleString("tr-TR")} ₺`; // Fiyatı ekledik
         detailsDiv.appendChild(summary);
-
+        
         const detailContent = document.createElement("div");
         detailContent.innerHTML = `
           <img src="${item.imageUrl}" alt="${item.title}" class="detail-image">
           <p>Boyut: ${item.width} x ${item.height} m</p>
           <p>Alan: ${item.area} m²</p>
-          <p>Toplam Fiyat: ${item.price.toLocaleString("tr-TR")} ₺</p>
         `;
         detailsDiv.appendChild(detailContent);
         rightSide.appendChild(detailsDiv);
+        detailsDiv.classList.add("sonuc__details")
       });
-
       categoryDiv.appendChild(rightSide);
       sonucContainer.appendChild(categoryDiv);
     }
