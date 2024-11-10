@@ -18,6 +18,8 @@ async function initializeCategories() {
     Object.entries(categoriesData).forEach(([categoryName, category]) => {
       if (!category.parentCategory) { // Ana kategori ise
         categoryTotals[categoryName] = {
+          title: category.title, // Kategori başlığını ekle
+          img: category.imageUrl || '',
           price: 0,
           width: 0,
           height: 0,
@@ -205,7 +207,7 @@ function createItemHtml(categoryName, item, index) {
         <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
         <p class="sizes__paragh">Fiyat: ${priceDisplay}</p>
       </div>
-      <button data-category="${categoryName}" data-index="${index}" data-price="${item.price}" data-width="${item.width || 0}"
+      <button data-category="${categoryName}" data-img="${item.imageUrl}" data-index="${index}" data-price="${item.price}" data-width="${item.width || 0}"
       data-height="${item.height || 0}" class="button-6 proButs">Seç</button>
     </div>`;
 }
@@ -246,53 +248,6 @@ function handleItemClick(button, categoriesData) {
 
     delete button.dataset.processing;
   });
-}
-function updateSelectedProductsDisplay() {
-  const sonucContainer = document.getElementById("sonuc__container");
-  sonucContainer.innerHTML = ""; // Önce içeriği temizle
-
-  // Seçilen ürünleri görüntüle
-  Object.entries(categoryTotals).forEach(([mainCategory, totals]) => {
-    if (totals.items.length > 0) {
-      const categoryDiv = document.createElement("div");
-      categoryDiv.innerHTML = `<h3>${mainCategory} Ürünleri:</h3>`;
-      
-      totals.items.forEach(item => {
-        const productDiv = document.createElement("div");
-        productDiv.innerHTML = `
-          <p>Ürün: ${item.categoryName}</p>
-          <p>Fiyat: ${item.price.toLocaleString("tr-TR")}₺</p>
-          <p>Boyut: ${item.width} x ${item.height} m</p>
-        `;
-        categoryDiv.appendChild(productDiv);
-      });
-
-      sonucContainer.appendChild(categoryDiv);
-    }
-  });
-
-  // Form ekleme
-  const formHTML = `
-    <details>
-      <summary style="cursor: pointer; font-weight: bold;">İletişim Bilgileri</summary>
-      <form id="contact-form">
-        <label for="name">Ad:</label>
-        <input type="text" id="name" name="name" required>
-        <label for="surname">Soyad:</label>
-        <input type="text" id="surname" name="surname" required>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <label for="phone">Telefon Numarası:</label>
-        <input type="tel" id="phone" name="phone" required>
-        <button type="submit">Gönder</button>
-      </form>
-    </details>
-  `;
-  
-  sonucContainer.insertAdjacentHTML('beforeend', formHTML);
-
-  // Sayfayı en alta kaydır
-  // sonucContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
 
@@ -505,15 +460,12 @@ function selectItem(button, categoryName, mainCategory) {
     let calculatedPrice;
     if (category.priceFormat === 'metrekare') {
       calculatedPrice = basePrice * totalArea;
-      const priceElement = parentDiv.querySelector('.sizes__paragh');
-      const formattedBasePrice = basePrice.toLocaleString("tr-TR");
-      const formattedCalculatedPrice = calculatedPrice.toLocaleString("tr-TR");
-      priceElement.textContent = `Fiyat: ${formattedCalculatedPrice}₺ (${formattedBasePrice}₺/m²)`;
     } else if (category.priceFormat === 'cevre') {
       calculatedPrice = basePrice * (2 * (width + height));
     } else {
       calculatedPrice = basePrice;
     }
+    
     button.classList.add("selected");
     parentDiv.classList.add("selected");
 
@@ -531,6 +483,16 @@ function selectItem(button, categoryName, mainCategory) {
     selectedItemsPerCategory[categoryName] = button;
     const tags = parentDiv.getAttribute("data-tag").split(',').map(t => t.trim());
     selectedTagsPerCategory[categoryName] = tags;
+
+    // Ana kategori olmayan kategoriler için resim ayarlama
+    if (!category.parentCategory) {
+      const selectedImage = button.querySelector('img'); // Seçilen butondaki resim
+      if (selectedImage) {
+        categoryTotals[mainCategory].img = selectedImage.src; // Resmi categoryTotals'a ekle
+      } else {
+        console.warn("Seçilen butonda resim bulunamadı.");
+      }
+    }
 
     // Alt kategorilerin fiyatlarını güncelle
     updateAllPrices(mainCategory);
@@ -561,11 +523,7 @@ function deselectItem(button, categoryName, mainCategory) {
     let calculatedPrice;
     if (category.priceFormat === 'metrekare') {
       calculatedPrice = basePrice * totalArea;
-    } 
-    else if (category.priceFormat === 'artis') {
-      // 'artis' fiyat formatı için hesaplama
-      calculatedPrice = basePrice * (width * height);}
-      else if (category.priceFormat === 'cevre') {
+    } else if (category.priceFormat === 'cevre') {
       const currentPerimeter = (categoryTotals[mainCategory].width + categoryTotals[mainCategory].height) * 2;
       calculatedPrice = basePrice * currentPerimeter;
     } else {
@@ -577,35 +535,27 @@ function deselectItem(button, categoryName, mainCategory) {
 
     // Hesaplanmış fiyatı çıkar
     categoryTotals[mainCategory].price -= calculatedPrice;
-    categoryTotals[mainCategory].items = categoryTotals[mainCategory].items
-      .filter(item => item.categoryName !== categoryName);
+    categoryTotals[mainCategory].items = categoryTotals[mainCategory].items.filter(item => item.button !== button);
 
-    delete selectedItemsPerCategory[categoryName];
-    delete selectedTagsPerCategory[categoryName];
-
-    // Fiyat gösterimini güncelle
-    const priceElement = button.closest('.focus-item').querySelector('.sizes__paragh');
-    const formattedBasePrice = basePrice.toLocaleString("tr-TR");
-
-    // Fiyat formatına göre farklı gösterim
-    switch(category.priceFormat) {
-      case 'metrekare':
-        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/m²`;
-        break;
-      case 'cevre':
-        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺`;
-        break;
-        case 'artis':
-        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/m²`;
-        break;
-      default: // 'tekil' veya diğer formatlar
-        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺`;
+    // Ana kategori olmayan kategoriler için resim ayarlama
+    if (!category.parentCategory) {
+      const remainingItems = categoryTotals[mainCategory].items;
+      if (remainingItems.length > 0) {
+        const lastSelectedItem = remainingItems[remainingItems.length - 1];
+        const selectedImage = lastSelectedItem.button.querySelector('img'); // Son seçilen butondaki resim
+        if (selectedImage) {
+          categoryTotals[mainCategory].img = selectedImage.src; // Resmi categoryTotals'a güncelle
+        }
+      } else {
+        categoryTotals[mainCategory].img = ''; // Hiçbir item kalmadıysa resmi temizle
+      }
     }
 
-    // Tüm fiyatları güncelle
+    // Alt kategorilerin fiyatlarını güncelle
     updateAllPrices(mainCategory);
   }
 }
+
 function getMainCategory(categoryName, categoriesData) {
   if (!categoryName || !categoriesData[categoryName]) {
     console.warn(`Geçersiz kategori: ${categoryName}`);
@@ -821,5 +771,116 @@ function updateSubcategoryPrices(parentCategoryName) {
   });
 }
 
+function updateSelectedProductsDisplay() {
+  const sonucContainer = document.getElementById("sonuc__container");
+  sonucContainer.innerHTML = ""; // Önce içeriği temizle
+
+  // Sol taraftaki ana kategorileri görüntüle
+  const anaKategoriler = Object.entries(categoryTotals).filter(([_, totals]) => {
+    return !totals.parentCategory; // Ana kategorileri filtrele
+  });
+
+  anaKategoriler.forEach(([mainCategory, totals]) => {
+    if (totals.items.length > 0) {
+      const categoryDiv = document.createElement("div");
+      categoryDiv.classList.add("category-section");
+
+      const leftSide = document.createElement("div");
+      leftSide.classList.add("left-side");
+
+      // Ana kategoriye ait ürünlerin görsellerini ekleyin
+      totals.items.forEach(item => {
+        const productDiv = document.createElement("div");
+        productDiv.classList.add("product-item");
+
+        const image = document.createElement("img");
+        image.src = item.imageUrl; // Ürün görseli
+        image.alt = item.title; // Ürün başlığı
+        image.classList.add("product-image");
+
+        productDiv.appendChild(image);
+        leftSide.appendChild(productDiv);
+      });
+
+      categoryDiv.appendChild(leftSide);
+
+      const rightSide = document.createElement("div");
+      rightSide.classList.add("right-side");
+
+      const categoryTitle = document.createElement("h2");
+      categoryTitle.textContent = totals.title || mainCategory; // Ana kategori başlığı
+      rightSide.appendChild(categoryTitle);
+
+      // Alt kategorilerin isimlerini ve detaylarını gösteren bir bölüm oluşturun
+      totals.items.forEach(item => {
+        const detailsDiv = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = item.title; // Alt kategori başlığı
+        detailsDiv.appendChild(summary);
+
+        const detailContent = document.createElement("div");
+        detailContent.innerHTML = `
+          <img src="${item.imageUrl}" alt="${item.title}" class="detail-image">
+          <p>Boyut: ${item.width} x ${item.height} m</p>
+          <p>Alan: ${item.area} m²</p>
+          <p>Toplam Fiyat: ${item.price.toLocaleString("tr-TR")} ₺</p>
+        `;
+        detailsDiv.appendChild(detailContent);
+        rightSide.appendChild(detailsDiv);
+      });
+
+      categoryDiv.appendChild(rightSide);
+      sonucContainer.appendChild(categoryDiv);
+    }
+  });
+
+  // İletişim formunu ekleyin
+  const formHTML = `
+    <details>
+      <summary style="cursor: pointer; font-weight: bold;">İletişim Bilgileri</summary>
+      <form id="contact-form">
+        <label for="name">Ad:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="surname">Soyad:</label>
+        <input type="text" id="surname" name="surname" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <label for="phone">Telefon Numarası:</label>
+        <input type="tel" id="phone" name="phone" required>
+        <button type="submit">Gönder</button>
+      </form>
+    </details>
+  `;
+  
+  sonucContainer.insertAdjacentHTML('beforeend', formHTML);
+}
+// Detayları gösteren modal fonksiyonu
+function showDetails(item) {
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
+  modal.innerHTML = `
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>${item.categoryName}</h2>
+      <img src="${item.imageUrl}" alt="${item.categoryName}" class="modal-image">
+      <p>Boyut: ${item.width} x ${item.height} m</p>
+      <p>Alan: ${item.area} m²</p>
+      <p>Toplam Fiyat: ${item.price.toLocaleString("tr-TR")} ₺</p>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const closeButton = modal.querySelector(".close-button");
+  closeButton.addEventListener("click", () => {
+    modal.remove();
+  });
+
+  window.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      modal.remove();
+    }
+  });
+}
 // Initialize categories on page load
 document.addEventListener("DOMContentLoaded", initializeCategories);
