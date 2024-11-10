@@ -28,7 +28,7 @@ async function initializeCategories() {
     });
     renderCategories(categoriesData);
     addEventListeners(categoriesData);
-    
+    updateSelectedProductsDisplay(); // Burada çağırarak güncellemeyi yapabilirsiniz
   } catch (error) {
     console.error("Error loading categories:", error);
   }
@@ -240,8 +240,59 @@ function handleItemClick(button, categoriesData) {
     updateAffectedCategories(getAffectedCategories(categoryName, categoriesData), categoriesData);
     updateTotalPrice();
     logCategoryTotals();
+    
+    // Seçilen ürünleri güncelle
+    updateSelectedProductsDisplay();
+
     delete button.dataset.processing;
   });
+}
+function updateSelectedProductsDisplay() {
+  const sonucContainer = document.getElementById("sonuc__container");
+  sonucContainer.innerHTML = ""; // Önce içeriği temizle
+
+  // Seçilen ürünleri görüntüle
+  Object.entries(categoryTotals).forEach(([mainCategory, totals]) => {
+    if (totals.items.length > 0) {
+      const categoryDiv = document.createElement("div");
+      categoryDiv.innerHTML = `<h3>${mainCategory} Ürünleri:</h3>`;
+      
+      totals.items.forEach(item => {
+        const productDiv = document.createElement("div");
+        productDiv.innerHTML = `
+          <p>Ürün: ${item.categoryName}</p>
+          <p>Fiyat: ${item.price.toLocaleString("tr-TR")}₺</p>
+          <p>Boyut: ${item.width} x ${item.height} m</p>
+        `;
+        categoryDiv.appendChild(productDiv);
+      });
+
+      sonucContainer.appendChild(categoryDiv);
+    }
+  });
+
+  // Form ekleme
+  const formHTML = `
+    <details>
+      <summary style="cursor: pointer; font-weight: bold;">İletişim Bilgileri</summary>
+      <form id="contact-form">
+        <label for="name">Ad:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="surname">Soyad:</label>
+        <input type="text" id="surname" name="surname" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <label for="phone">Telefon Numarası:</label>
+        <input type="tel" id="phone" name="phone" required>
+        <button type="submit">Gönder</button>
+      </form>
+    </details>
+  `;
+  
+  sonucContainer.insertAdjacentHTML('beforeend', formHTML);
+
+  // Sayfayı en alta kaydır
+  // sonucContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
 
@@ -308,7 +359,12 @@ function updateAllPrices(mainCategory) {
         break;
       case 'artis':
         // Artış fiyat hesaplama
-        calculatedPrice = (item.basePrice * totalArea) - (categoryTotals[mainCategory].items.length > 0 ? categoryTotals[mainCategory].items[0].price : 0);
+        if(item.basePrice > 0 ){
+          calculatedPrice = (item.basePrice * totalArea) - (categoryTotals[mainCategory].items.length > 0 ? categoryTotals[mainCategory].items[0].price : 0);
+        }
+        else{
+          calculatedPrice = 0;
+        }
         break;
       default:
         calculatedPrice = item.basePrice; // Diğer türler için basePrice kullan
@@ -334,8 +390,16 @@ function updateAllPrices(mainCategory) {
 
           // Fiyat formatına göre gösterim yap
           if (category.priceFormat === 'artis') {
+            
             const calculatedPrice = (basePrice * totalArea) - (categoryTotals[mainCategory].items.length > 0 ? categoryTotals[mainCategory].items[0].price : 0);
-            priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString("tr-TR")}₺`;
+            if (calculatedPrice <= 0) {
+              priceElement.textContent = `Fiyat: 0₺`;
+            }
+            else {
+              
+              priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString("tr-TR")}₺`;
+            }
+            
           } else if (category.priceFormat === 'metrekare') {
             const calculatedPrice = basePrice * totalArea;
             priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString("tr-TR")}₺ (${basePrice.toLocaleString("tr-TR")}₺/m²)`;
@@ -397,17 +461,29 @@ function calculatePrice(item, category, mainCategory) {
       calculatedPrice = item.price * ((width + height) * 2);
       break;
     case 'artis':
-      // Artış fiyat hesaplama
       calculatedPrice = item.price * (width * height);
-      const firstItemPrice = categoryTotals[mainCategory].items.length > 0 
+      if (item.price < 0){
+        return 0;
+      }
+      else {
+        const firstItemPrice = categoryTotals[mainCategory].items.length > 0 
         ? categoryTotals[mainCategory].items[0].price 
         : 0;
-      return (calculatedPrice - firstItemPrice); // İlk öğenin fiyatını çıkart
+        if(calculatePrice > 0 ){
+          calculatedPrice -= firstItemPrice; // İlk öğenin fiyatını çıkart
+          break;
+        }
+      }
+     
+        
     default:
       return 0; // Diğer durumlarda 0 döndür
   }
 
-  return calculatedPrice; // Diğer hesaplama türleri için hesaplanan fiyatı döndür
+  // Eğer hesaplanan fiyat 0 veya daha küçükse, fiyatı 0 olarak ayarla
+  return calculatedPrice <= 0 ? 0 : calculatedPrice;
+
+ 
 }
 function selectItem(button, categoryName, mainCategory) {
   if (!button.classList.contains("selected")) {
@@ -485,7 +561,11 @@ function deselectItem(button, categoryName, mainCategory) {
     let calculatedPrice;
     if (category.priceFormat === 'metrekare') {
       calculatedPrice = basePrice * totalArea;
-    } else if (category.priceFormat === 'cevre') {
+    } 
+    else if (category.priceFormat === 'artis') {
+      // 'artis' fiyat formatı için hesaplama
+      calculatedPrice = basePrice * (width * height);}
+      else if (category.priceFormat === 'cevre') {
       const currentPerimeter = (categoryTotals[mainCategory].width + categoryTotals[mainCategory].height) * 2;
       calculatedPrice = basePrice * currentPerimeter;
     } else {
@@ -513,7 +593,10 @@ function deselectItem(button, categoryName, mainCategory) {
         priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/m²`;
         break;
       case 'cevre':
-        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/çevre`;
+        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺`;
+        break;
+        case 'artis':
+        priceElement.textContent = `Fiyat: ${formattedBasePrice}₺/m²`;
         break;
       default: // 'tekil' veya diğer formatlar
         priceElement.textContent = `Fiyat: ${formattedBasePrice}₺`;
