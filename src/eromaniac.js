@@ -10,7 +10,8 @@ let selectedTagsPerCategory = {}; // Seçilen etiketleri saklamak için eklenen 
 let categoriesData = {};
 let dimensionsPerCategory = {};
 let categoryTotals = {};
-
+let currentWidth;
+let currentHeight;
 // Initialize categories
 async function initializeCategories() {
   try {
@@ -60,7 +61,7 @@ function renderCategory(categoryName, category) {
   const categoryHTML = `
     <div class="category-container" id="${categoryName}_container">
       <h3 id="${categoryName}__title">${category.title || "Select"} Seçiniz</h3>
-      <div id="${categoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+      <div id="${categoryName}" class="focus-grid"></div>
     </div>
   `;
 
@@ -112,7 +113,7 @@ function renderSubcategoriesRecursively(parentCategoryName, categoriesData) {
         <h3 id="${subCategoryName}__title">${
       subCategory.title || "Select"
     } Seçiniz</h3>
-        <div id="${subCategoryName}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+        <div id="${subCategoryName}" class="focus-grid"></div>
       </div>
     `;
 
@@ -207,9 +208,10 @@ function createItemHtml(categoryName, item, index) {
         <div class="title__ort">
           <h2 class="sizes__title">${item.name}</h2>
         </div>
-        <img class="product__img content__ort" src="${item.imageUrl}" alt="${
-    item.name
-  }">
+   
+      <div style="background: url(${
+        item.imageUrl
+      });  height:30vh; background-size:100% 100%;"></div>
       </div>
       <details>
         <summary style="margin: 0 auto;cursor:pointer;display: flex;justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
@@ -338,16 +340,31 @@ function updateAllPrices(mainCategory) {
         calculatedPrice = item.basePrice * currentPerimeter;
         break;
       case "artis":
-        // Artış fiyat hesaplama
-        if (item.basePrice > 0) {
-          calculatedPrice =
-            item.basePrice * totalArea -
-            (categoryTotals[mainCategory].items.length > 0
-              ? categoryTotals[mainCategory].items[0].price
-              : 0);
-        } else {
-          calculatedPrice = 0;
-        }
+        const basePrice = item.basePrice; // ürünün birim fiyatı
+         // mevcut yükseklik
+       
+        // Yeni alanı hesapla
+        const newWidth = currentWidth + (item.width || 0); // yeni genişlik
+        const newHeight = currentHeight + (item.height || 0); // yeni yükseklik
+        const newArea = newWidth * newHeight; // yeni toplam alan
+        const previousArea = currentHeight * currentWidth;
+        const alanFarki = newArea - previousArea;
+        calculatedPrice = basePrice * alanFarki;
+        // İlk ürünün fiyatını hesapla
+        const initialCalculatedPrice =
+          basePrice * (currentWidth * currentHeight); // ilk ürünün fiyatı
+        // Yeni fiyatı hesapla
+        // const additionalCalculatedPrice = basePrice * (newArea - (currentWidth * currentHeight)); // eklenen alanın fiyatı
+
+        console.log("Hesaplama Süreci:");
+        console.log(
+          `Mevcut Genişlik: ${currentWidth}, Mevcut Yükseklik: ${currentHeight}`
+        );
+        console.log(`Yeni Genişlik: ${newWidth}, Yeni Yükseklik: ${newHeight}`);
+        console.log(`Önceki Alan: ${previousArea}, Yeni Alan: ${newArea}`);
+        console.log(`Alan Farkı: ${alanFarki}`);
+        console.log(`Hesaplanan Fiyat: ${calculatedPrice}`);
+
         break;
       default:
         calculatedPrice = item.basePrice; // Diğer türler için basePrice kullan
@@ -460,7 +477,7 @@ function calculatePrice(item, category, mainCategory) {
       calculatedPrice = item.price * ((width + height) * 2);
       break;
     case "artis":
-      calculatedPrice = item.price * (width * height);
+      calculatedPrice = item.price * item.area;
       if (item.price < 0) {
         return 0;
       } else {
@@ -468,10 +485,12 @@ function calculatePrice(item, category, mainCategory) {
           categoryTotals[mainCategory].items.length > 0
             ? categoryTotals[mainCategory].items[0].price
             : 0;
-        if (calculatePrice > 0) {
-          calculatedPrice -= firstItemPrice; // İlk öğenin fiyatını çıkart
-          break;
-        }
+
+        calculatePrice -= firstItemPrice;
+        // if (calculatePrice > 0) {
+        //   calculatedPrice -= firstItemPrice; // İlk öğenin fiyatını çıkart
+        //   break;
+        // }
       }
 
     default:
@@ -489,6 +508,8 @@ function selectItem(button, categoryName, mainCategory) {
     const parentDiv = button.closest(".focus-item");
     const category = categoriesData[categoryName];
 
+     currentWidth = categoryTotals[mainCategory].width; // 2.5
+     currentHeight = categoryTotals[mainCategory].height;
     // Önce boyutları güncelle
     categoryTotals[mainCategory].width += width;
     categoryTotals[mainCategory].height += height;
@@ -540,7 +561,7 @@ function selectItem(button, categoryName, mainCategory) {
       } else {
       }
     }
-
+    updateSelectedProductsDisplay();
     // Alt kategorilerin fiyatlarını güncelle
     updateAllPrices(mainCategory);
   }

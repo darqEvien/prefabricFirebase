@@ -187,8 +187,11 @@ html, body {
 }
 
 .focus-item img {
-  width: 100%;
-  height: auto;
+display: flex;
+width: 50%;
+height: auto;
+margin: 0 auto 20px auto;
+    
 }
 
 .sizes__title {
@@ -235,7 +238,7 @@ html, body {
 }
 
 .title__ort {
-  height: 4.2rem;
+  
   text-align: center;
 
 }
@@ -283,6 +286,8 @@ html, body {
 }
 #sonuc__container {
   margin-top: 20px; /* Üstten biraz boşluk bırak */
+  display: grid;
+  grid-template-columns: 5fr 3fr;
 }
 
 .items-table {
