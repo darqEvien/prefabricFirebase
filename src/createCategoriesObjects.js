@@ -10,7 +10,8 @@ async function getCategories() {
     id: doc.id,
     select: doc.data().select,
     parentCategory: doc.data().parentCategory,
-    priceFormat: doc.data().priceFormat, // Yeni eklenen alan
+    priceFormat: doc.data().priceFormat,
+    catTag: doc.data().tags, // Yeni eklenen alan
     ...doc.data(),
   }));
 }
@@ -56,6 +57,7 @@ async function createCategoryObjects() {
         select: category.select,
         parentCategory: category.parentCategory,
         priceFormat: category.priceFormat, // Yeni eklenen alan
+        catTag: category.tags,
         documents: documents.map((doc) => ({
           id: doc.id,
           ...doc,
