@@ -29,6 +29,7 @@ async function initializeCategories() {
           items: [],
           parentCategory: category.parentCategory,
           catTag: category.tags,
+        
         };
       }
     });
@@ -48,18 +49,30 @@ async function initializeCategories() {
 
 // Render categories and products on the page
 function renderCategories(categoriesData) {
-  // Önce tüm kategorileri order'a göre sıralayalım
   const sortedCategories = Object.entries(categoriesData).sort(
     (a, b) => (a[1].order || 0) - (b[1].order || 0)
   );
 
-  // Ana kategorileri render edelim
+  const hasSelectedTags = Object.keys(selectedTagsPerCategory).some(
+    (category) => selectedTagsPerCategory[category].length > 0
+  );
+
   for (const [categoryName, category] of sortedCategories) {
     if (!category.parentCategory || category.parentCategory === "") {
-      categoryNames.push(categoryName);
-      tagFilters[categoryName] = [];
+      // Tag filtrelemesi
+      const selectedTags = selectedTagsPerCategory[categoryName] || [];
+      const hasMatchingTag =
+        selectedTags.length === 0 || (category.tag && category.tag.includes(selectedTags));
 
-      renderCategory(categoryName, category);
+      // Eğer hiç tag seçilmediyse "konti" tagına sahip kategorileri göster
+     
+
+      // Eğer tag seçilmişse ve eşleşiyorsa, kategoriyi göster
+      if (hasSelectedTags && hasMatchingTag) {
+        categoryNames.push(categoryName);
+        tagFilters[categoryName] = [];
+        renderCategory(categoryName, category);
+      }
     }
   }
 }
@@ -250,7 +263,7 @@ function addEventListeners(categoriesData) {
 function handleItemClick(button, categoriesData) {
   const categoryName = button.getAttribute("data-category");
   const mainCategory = getMainCategory(categoryName, categoriesData);
-
+  const tags = button.getAttribute("data-tag").split(",").map(t => t.trim());
   if (!mainCategory || button.dataset.processing) return;
   button.dataset.processing = true;
 
@@ -284,6 +297,7 @@ function handleItemClick(button, categoriesData) {
     delete button.dataset.processing;
   });
 }
+
 
 function clearSubcategorySelections(parentCategoryName) {
   Object.keys(categoriesData).forEach((categoryName) => {
@@ -451,7 +465,7 @@ function updateAffectedCategories(categories, categoriesData) {
         const parentTags =
           selectedTagsPerCategory[selectedParentCategory] || [];
         const hasMatchingTag =
-          parentTags.length === 0 ||
+          parentTags.length > 0 ||
           itemTags.some((tag) => parentTags.includes(tag));
 
         item.style.display = hasMatchingTag ? "grid" : "none";
@@ -554,6 +568,7 @@ function selectItem(button, categoryName, mainCategory) {
       imageUrl: button.getAttribute("data-img"), // Ürün görseli
       title: parentDiv.querySelector(".sizes__title").textContent, // Ürün başlığı
       parentCategory: category.parentCategory,
+      tags:["konti"],
     });
 
     selectedItemsPerCategory[categoryName] = button;
@@ -583,7 +598,6 @@ function selectItem(button, categoryName, mainCategory) {
     updateSelectedProductsDisplay();
     // Alt kategorilerin fiyatlarını güncelle
     updateAllPrices(mainCategory);
-    filterCategoriesByTags();
   }
 }
 function deselectItem(button, categoryName, mainCategory) {
@@ -760,6 +774,7 @@ function logCategoryTotals() {
         basePrice: item.basePrice,
         calculatedPrice: item.calculatedPrice,
         dimensions: `${item.width}x${item.height}`,
+        tags: item.categoryTag,
         priceFormat: item.priceFormat,
         total: item.calculatedPrice,
       })),
@@ -816,7 +831,7 @@ function updateSelectedProductsDisplay() {
 
   const leftSide = document.createElement("div");
   leftSide.classList.add("left-part"); // Sol bölüm için sınıf ekleyin
-
+  console.log("Seçilen Tagler:",selectedItemsPerCategory);
   // Sol taraftaki ana kategorileri görüntüle
   const anaKategoriler = Object.entries(categoryTotals).filter(
     ([_, totals]) => {

@@ -82,4 +82,5 @@ async function createCategoryObjects() {
 
 export const fetchCategoriesData = async () => {
   return await createCategoryObjects();
+
 };
