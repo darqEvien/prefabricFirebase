@@ -194,7 +194,18 @@ function hideSubcategoriesRecursively(categoryName, categoriesData) {
 // Create product HTML
 function createItemHtml(categoryName, item, index) {
   const category = categoriesData[categoryName];
+  const mainCategory = getMainCategory(categoryName, categoriesData); // Ana kategoriyi al
+  const mainCategoryTotals = categoryTotals[mainCategory] || {}; // Ana kategorinin toplamlarını al
+
+  // Ana kategorinin height ve width değerlerini al
+  const height = mainCategoryTotals.height || 0;
+  const width = mainCategoryTotals.width || 0;
+
+  // Yeni alanı hesapla (artış durumunda)
+  const newArea = (width + (item.width || 0)) * (height + (item.height || 0));
+ 
   let priceDisplay;
+  let itemHTML = '';
 
   if (category.priceFormat === "metrekare") {
     const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
@@ -207,37 +218,144 @@ function createItemHtml(categoryName, item, index) {
     priceDisplay = `${formattedPrice}₺`;
   }
 
-  return `
-    <div class="focus-item" id="${categoryName}Div" data-tag="${
-    item.tag || ""
-  }">
-      <div class="ero__ort">
-        <div class="title__ort">
-          <h2 class="sizes__title">${item.name}</h2>
-        </div>
-   
-      <div style="background: url(${
-        item.imageUrl
-      });  height:30vh; background-size:100% 100%;"></div>
-      </div>
-      <details>
-        <summary style="margin: 0 auto;cursor:pointer;display: flex;justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
-        <p>${item.description}</p>
-      </details>
-      <hr>
-      <div class="sizes__desc">
-        <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${
-          item.size
-        }m²</span></i>
-        <p class="sizes__paragh">Fiyat: ${priceDisplay}</p>
-      </div>
-      <button data-category="${categoryName}" data-img="${
-    item.imageUrl
-  }" data-index="${index}" data-price="${item.price}" data-width="${
-    item.width || 0
-  }"
-      data-height="${item.height || 0}" data-tag="${item.tag}"class="button-6 proButs">Seç</button>
-    </div>`;
+  switch (category.priceFormat) {
+    case "metrekare":
+      itemHTML = `
+        <div class="focus-item" id="${categoryName}Div" data-tag="${item.tag || ""}">
+          <div class="ero__ort">
+            <div class="title__ort">
+              <h2 class="sizes__title">${item.name}</h2>
+            </div>
+            <div style="background: url(${item.imageUrl}); height:30vh; background-size:100% 100%;"></div>
+          </div>
+          <details>
+            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
+            <p>${item.description}</p>
+          </details>
+          <hr>
+          <div class="sizes__desc">
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
+            <p class="sizes__paragh">Fiyat: ${(item.price).toLocaleString("tr-TR")}₺/m²</p>
+          </div>
+          <button data-category="${categoryName}" data-img="${item.imageUrl}" data-index="${index}" data-price="${item.price}" data-width="${item.width || 0}" data-height="${item.height || 0}" data-tag="${item.tag}" class="button-6 proButs">Seç</button>
+        </div>`;
+      break;
+
+    case "artis":
+      const height = mainCategoryTotals.height || 0;
+      const width = mainCategoryTotals.width || 0;
+      let alan = height * width
+      itemHTML = `
+        <div class="focus-item" id="${categoryName}Div" data-tag="${item.tag || ""}">
+          <div class="ero__ort">
+            <div class="title__ort">
+              <h2 class="sizes__title">${item.name}</h2>
+            </div>
+            <div style="background: url(${item.imageUrl}); height:30vh; background-size:100% 100%;"></div>
+          </div>
+          <details>
+            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
+            <p>${item.description}</p>
+          </details>
+          <hr>
+          <div class="sizes__desc">
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${alan}m²</span></i>
+            <p class="sizes__paragh">Fiyat: ${(item.price).toLocaleString("tr-TR")}₺/m²</p>
+          </div>
+          <button data-category="${categoryName}" data-img="${item.imageUrl}" data-index="${index}" data-price="${item.price}" data-width="${item.width || 0}" data-height="${item.height || 0}" data-tag="${item.tag}" class="button-6 proButs">Seç</button>
+        </div>`;
+      break;
+
+    case "cevre":
+      itemHTML = `
+        <div class="focus-item" id="${categoryName}Div" data-tag="${item.tag || ""}">
+          <div class="ero__ort">
+            <div class="title__ort">
+              <h2 class="sizes__title">${item.name}</h2>
+            </div>
+            <div style="background: url(${item.imageUrl}); height:30vh; background-size:100% 100%;"></div>
+          </div>
+          <details>
+            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
+            <p>${item.description}</p>
+          </details>
+          <hr>
+          <div class="sizes__desc">
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
+            <p class="sizes__paragh">Fiyat: ${(item.price).toLocaleString("tr-TR")}₺/m</p>
+          </div>
+          <button data-category="${categoryName}" data-img="${item.imageUrl}" data-index ="${index}" data-price="${item.price}" data-width="${item.width || 0}" data-height="${item.height || 0}" data-tag="${item.tag}" class="button-6 proButs">Seç</button>
+        </div>`;
+      break;
+
+    case "tekil":
+      itemHTML = `
+        <div class="focus-item" id="${categoryName}Div" data-tag="${item.tag || ""}">
+          <div class="ero__ort">
+            <div class="title__ort">
+              <h2 class="sizes__title">${item.name}</h2>
+            </div>
+            <div style="background: url(${item.imageUrl}); height:30vh; background-size:100% 100%;"></div>
+          </div>
+          <details>
+            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
+            <p>${item.description}</p>
+          </details>
+          <hr>
+          <div class="sizes__desc">
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
+            <p class="sizes__paragh">Fiyat: ${(item.price).toLocaleString("tr-TR")}₺</p>
+          </div>
+          <button data-category="${categoryName}" data-img="${item.imageUrl}" data-index="${index}" data-price="${item.price}" data-width="${item.width || 0}" data-height="${item.height || 0}" data-tag="${item.tag}" class="button-6 proButs">Seç</button>
+        </div>`;
+      break;
+
+    case "tasDuvar":
+      itemHTML = `
+        <div class="focus-item" id="${categoryName}Div" data-tag="${item.tag || ""}">
+          <div class="ero__ort">
+            <div class="title__ort">
+              <h2 class="sizes__title">${item.name}</h2>
+            </div>
+            <div style="background: url(${item.imageUrl}); height:30vh; background-size:100% 100%;"></div>
+          </div>
+          <details>
+            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
+            <p>${item.description}</p>
+          </details>
+          <hr>
+          <div class="sizes__desc">
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
+            <p class="sizes__paragh">Fiyat: ${(item.price).toLocaleString("tr-TR")}₺</p>
+          </div>
+          <button data-category="${categoryName}" data-img="${item.imageUrl}" data-index="${index}" data-price="${item.price}" data-width="${item.width || 0}" data-height="${item.height || 0}" data-tag="${item.tag}" class="button-6 proButs">Seç</button>
+        </div>`;
+      break;
+
+    default:
+      itemHTML = `
+        <div class="focus-item" id="${categoryName}Div" data-tag="${item.tag || ""}">
+          <div class="ero__ort">
+            <div class="title__ort">
+              <h2 class="sizes__title">${item.name}</h2>
+            </div>
+            <div style="background: url(${item.imageUrl}); height:30vh; background-size:100% 100%;"></div>
+          </div>
+          <details>
+            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
+            <p>${item.description}</p>
+          </details>
+          <hr>
+          <div class="sizes__desc">
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${item.size}m²</span></i>
+            <p class="sizes__paragh">Fiyat: ${(item.price).toLocaleString("tr-TR")}₺</p>
+          </div>
+          <button data-category="${categoryName}" data-img="${item.imageUrl}" data-index="${index}" data-price="${item.price}" data-width="${item.width || 0}" data-height="${item.height || 0}" data-tag="${item.tag}" class="button-6 proButs">Seç</button>
+        </div>`;
+      break;
+  }
+
+  return itemHTML;
 }
 // Add event listeners to buttons
 function addEventListeners(categoriesData) {
@@ -390,6 +508,23 @@ function updateAllPrices(mainCategory) {
         console.log(`Hesaplanan Fiyat: ${calculatedPrice}`);
 
         break;
+        case "tasDuvar":
+          currentWidth = categoryTotals[mainCategory].width; // Bu değerlerin doğru alındığını kontrol edin
+          currentHeight = categoryTotals[mainCategory].height;
+          const alanFiyat = parseFloat(item.button.getAttribute("data-alan-price")) || 0; 
+          const cevre = ((currentHeight + currentWidth)*2);
+          const alan = (currentHeight * currentWidth);
+
+          // Yeni fiyat hesaplama yöntemi
+          calculatedPrice = (alan * alanFiyat) + (cevre * item.basePrice);
+          console.log("Hesaplama Süreci:");
+          console.log(
+            `Mevcut Genişlik: ${currentWidth}, Mevcut Yükseklik: ${currentHeight}, Çevre = ${cevre}`
+          );
+          console.log(`alan: ${alan}, Alan Fiyat: ${alanFiyat}`)
+          console.log(`Hesaplanan Fiyat: ${calculatedPrice}`);
+  
+          break; 
       default:
         calculatedPrice = item.basePrice; // Diğer türler için basePrice kullan
         break;

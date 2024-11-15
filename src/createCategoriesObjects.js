@@ -61,6 +61,7 @@ async function createCategoryObjects() {
         documents: documents.map((doc) => ({
           id: doc.id,
           ...doc,
+          alanPrice: doc.alanPrice || 0,
           // Eğer priceFormat 'tekil' veya 'metrekare' ise ve width ve height varsa, alanı hesapla
           area: (category.priceFormat === 'tekil' || category.priceFormat === 'metrekare') && doc.width && doc.height
             ? doc.width * doc.height
