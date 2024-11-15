@@ -668,11 +668,29 @@ function filterCategoriesByTags() {
     if (categoryElement) {
       const categoryTags = category.catTag || [];
       const matchesTags = categoryTags.some(tag => selectedCategories.includes(tag));
-
-      console.log(`Kategori: ${categoryName}, Etiketler: ${categoryTags}, Eşleşiyor: ${matchesTags}`);
-
-      // Eğer seçilen etiket yoksa veya etiket eşleşiyorsa kategoriyi göster
       categoryElement.style.display = hasSelectedTags && !matchesTags ? 'none' : 'block';
+    }
+   
+  });
+  filterSidebarItemsByTags();
+}
+
+function filterSidebarItemsByTags() {
+  const hasSelectedTags = selectedCategories.length > 0;
+
+  // Her bir sidebar butonunu döngüye al ve seçilen etiketlere göre göster/gizle
+  const sidebarItems = document.querySelectorAll(".sidebar-item");
+  sidebarItems.forEach(item => {
+    const button = item.querySelector("button");
+    const categoryName = button.id.replace("__menu", ""); // Butonun ID'sinden kategori adını al
+    const category = categoriesData[categoryName];
+
+    if (category) {
+      const categoryTags = category.catTag || [];
+      const matchesTags = categoryTags.some(tag => selectedCategories.includes(tag));
+
+      // Eğer seçilen etiket yoksa veya etiket eşleşmiyorsa butonu gizle
+      item.style.display = hasSelectedTags && !matchesTags ? 'none' : 'block';
     }
   });
 }
