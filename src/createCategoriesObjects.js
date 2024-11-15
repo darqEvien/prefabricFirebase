@@ -36,8 +36,8 @@ async function getDocumentsInCategory(categoryName) {
     const data = doc.data();
     return {
       id: doc.id,
-      width: data.width, // Yeni eklenen alan
-      height: data.height, // Yeni eklenen alan
+      width: data.width, // Geçerli bir sayı değilse 0 atayın
+      height: data.height, 
       ...data,
     };
   });
@@ -56,7 +56,7 @@ async function createCategoryObjects() {
         title: categoriesTitles.find((title) => title === category.title),
         select: category.select,
         parentCategory: category.parentCategory,
-        priceFormat: category.priceFormat, // Yeni eklenen alan
+        priceFormat: category.priceFormat,
         catTag: category.tags,
         documents: documents.map((doc) => ({
           id: doc.id,
