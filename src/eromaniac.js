@@ -285,8 +285,8 @@ function createItemHtml(categoryName, item, index) {
             <p>${item.description}</p>
           </details>
           <hr>
-          <div class="sizes__desc">
-            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${dynamicSize}m²</span></i>
+          <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${dynamicSize}m²</span></i></div>
             <p class="sizes__paragh">Fiyat: ${item.price.toLocaleString(
               "tr-TR"
             )}₺/m²</p>
@@ -490,20 +490,20 @@ function updateItemSizesOnSelection() {
           item.querySelector(".sizes__title").textContent = `${
             mainWidth + width
           }x${mainHeight + height}`;
-          item.querySelector(".sizes__size").textContent = `${
+          item.querySelector(".sizes__size").textContent = ` ${
             (mainWidth + width) * (mainHeight + height)
           }m²`;
-          item.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
+          item.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color: green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
         } else {
           // Hem width hem de height geçerli
           const newArea = (mainWidth + width) * (mainHeight + height); // Alanı hesapla
           item.querySelector(".sizes__title").textContent = `${
             mainWidth + width
           }x${mainHeight + height}`;
-          item.querySelector(".sizes__size").textContent = `${
+          item.querySelector(".sizes__size").textContent = ` ${
             (mainWidth + width) * (mainHeight + height)
           }m²`;
-          item.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
+          item.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
         }
       } else {
         // Kategori başına isSelected true olduğunda
@@ -527,20 +527,20 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__title").textContent = `${
                 mainWidth + width
               }x${mainHeight + height}`;
-              innerItem.querySelector(".sizes__size").textContent = `${
+              innerItem.querySelector(".sizes__size").textContent = ` ${
                 (mainWidth + width) * (mainHeight + height)
               }m²`;
-              innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
+              innerItem.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
             } else {
               // Width veya height değeri tanımlı (geçerli) olan diğer öğeler
               const newArea = (mainWidth + width) * (mainHeight + height);
               innerItem.querySelector(".sizes__title").textContent = `${
                 mainWidth + width
               }x${mainHeight + height}`;
-              innerItem.querySelector(".sizes__size").textContent = `${
+              innerItem.querySelector(".sizes__size").textContent = ` ${
                 (mainWidth + width) * (mainHeight + height)
               }m²`;
-              innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
+              innerItem.querySelector(".sizes__paragh").textContent = `Fark:<br><span style="color:green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
             }
           });
         } else {
@@ -566,18 +566,19 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__title").textContent = `${
                 mainWidth - width
               }x${mainHeight - height}`;
-              innerItem.querySelector(".sizes__size").textContent = `${
+              innerItem.querySelector(".sizes__size").textContent = ` ${
                 (mainWidth - width) * (mainHeight - height)
               }m²`;
-               innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:-${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
+               innerItem.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:red;">-${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
             } else {
               innerItem.querySelector(
                 ".sizes__title"
               ).textContent = `${mainWidth}x${mainHeight}`;
               innerItem.querySelector(
                 ".sizes__size"
-              ).textContent = `${mainArea}m²`;
-               innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
+              ).textContent = ` ${mainArea}m²`;
+               innerItem.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:green;">+0₺</span>`
+              //  ${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}
             }
           });
         }
