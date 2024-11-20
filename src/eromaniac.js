@@ -448,6 +448,8 @@ function createItemHtml(categoryName, item, index) {
 
   return itemHTML;
 }
+
+//ARTIS GÖSTERİMİ İÇİN
 function updateItemSizesOnSelection() {
   Object.keys(categoriesData).forEach((categoryName) => {
     const mainCategory = getMainCategory(categoryName, categoriesData);
@@ -471,8 +473,9 @@ function updateItemSizesOnSelection() {
       const itemButton = item.querySelector(".proButs");
       const width = parseFloat(itemButton.getAttribute("data-width")) || 0;
       const height = parseFloat(itemButton.getAttribute("data-height")) || 0;
+      const price = parseFloat(itemButton.getAttribute("data-price")) || 0;
       const isSelected = itemButton.classList.contains("selected");
-      const price = parseFloat(itemButton.getAttribute("data-price")); // Öğenin seçili olup olmadığını kontrol et
+   // Öğenin seçili olup olmadığını kontrol et
 
       if (isSelected) {
         anySelected = true; // Eğer bir öğe seçiliyse bayrağı güncelle
@@ -490,6 +493,7 @@ function updateItemSizesOnSelection() {
           item.querySelector(".sizes__size").textContent = `${
             (mainWidth + width) * (mainHeight + height)
           }m²`;
+          item.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
         } else {
           // Hem width hem de height geçerli
           const newArea = (mainWidth + width) * (mainHeight + height); // Alanı hesapla
@@ -499,6 +503,7 @@ function updateItemSizesOnSelection() {
           item.querySelector(".sizes__size").textContent = `${
             (mainWidth + width) * (mainHeight + height)
           }m²`;
+          item.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
         }
       } else {
         // Kategori başına isSelected true olduğunda
@@ -512,9 +517,7 @@ function updateItemSizesOnSelection() {
               parseFloat(innerButton.getAttribute("data-width")) || 0;
             const innerHeight =
               parseFloat(innerButton.getAttribute("data-height")) || 0;
-            const innerPrice = parseFloat(
-              innerButton.getAttribute("data-price")
-            );
+            const innerPrice = parseFloat(innerButton.getAttribute("data-price")) || 0;
             if (
               (isNaN(innerWidth) || innerWidth === 0) &&
               (isNaN(innerHeight) || innerHeight === 0)
@@ -527,6 +530,7 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__size").textContent = `${
                 (mainWidth + width) * (mainHeight + height)
               }m²`;
+              innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
             } else {
               // Width veya height değeri tanımlı (geçerli) olan diğer öğeler
               const newArea = (mainWidth + width) * (mainHeight + height);
@@ -536,6 +540,7 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__size").textContent = `${
                 (mainWidth + width) * (mainHeight + height)
               }m²`;
+              innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
             }
           });
         } else {
@@ -564,6 +569,7 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__size").textContent = `${
                 (mainWidth - width) * (mainHeight - height)
               }m²`;
+               innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:-${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
             } else {
               innerItem.querySelector(
                 ".sizes__title"
@@ -571,6 +577,7 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(
                 ".sizes__size"
               ).textContent = `${mainArea}m²`;
+               innerItem.querySelector(".sizes__paragh").textContent = `Fiyat:${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺`
             }
           });
         }
@@ -717,14 +724,14 @@ function updateAllPrices(mainCategory) {
 
         // Eğer alan farkı 0 veya negatifse fiyat 0 olur
         calculatedPrice = item.basePrice * (alanFarki > 0 ? alanFarki : 0);
-        const priceElement = document.querySelector(
-          `#${item.categoryName} .sizes__paragh`
-        );
-        if (priceElement) {
-          priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString(
-            "tr-TR"
-          )}₺`;
-        }
+        // const priceElement = document.querySelector(
+        //   `#${item.categoryName} .sizes__paragh`
+        // );
+        // if (priceElement) {
+        //   priceElement.textContent = `Fiyat: ${calculatedPrice.toLocaleString(
+        //     "tr-TR"
+        //   )}₺`;
+        // }
         break;
       default:
         calculatedPrice = item.basePrice; // Diğer durumlarda basePrice kullanılır
