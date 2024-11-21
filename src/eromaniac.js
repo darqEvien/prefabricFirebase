@@ -1017,14 +1017,27 @@ function removeSelectedPrice(price) {
 }
 // Update total price
 function updateTotalPrice() {
+  const totalSection = document.querySelector('#total__section');
+  if(totalSection.style.display === "none"){
+    totalSection.style.display = "block";
+  }
+  
   const grandTotal = Object.values(categoryTotals).reduce(
     (acc, curr) => acc + curr.price,
     0
-  );
-  document.getElementById(
-    "total"
-  ).textContent = `${grandTotal.toLocaleString()}₺`;
+  )
+  const firstCategory = Object.values(categoryTotals)[0]; // İlk öğeyi al
+  const grandTotalWidth = firstCategory?.width || 0; // İlk öğenin genişliği
+  const grandTotalHeight = firstCategory?.height || 0; 
+  
+  
+  document.getElementById("total").textContent = ` ${grandTotal.toLocaleString()}₺`;
+  document.getElementById("total-cevre").textContent = `${grandTotalWidth}x${grandTotalHeight} (${grandTotalHeight * grandTotalWidth}m²)`
+  if(document.getElementById("total").textContent === ` 0₺`){
+    totalSection.style.display = "none";
+  }
 }
+
 function logCategoryTotals() {
   console.log("Category Totals:", {
     ...categoryTotals,
