@@ -37,6 +37,7 @@ async function initializeCategories() {
 
     // Initialize with the 'konti' tag
     selectedCategories.push("konti");
+    selectedCategories.push("depo")
     console.log(selectedCategories); // Debugging to see if 'konti' is added
 
     renderCategories(categoriesData);
@@ -401,7 +402,7 @@ function createItemHtml(categoryName, item, index) {
           </div>
           <button data-category="${categoryName}" data-img="${
         item.imageUrl
-      }" data-index="${index}" data-price="${item.price}" data-width="${
+      }" data-index="${index}" data-price="${item.price}" data-alan-price="${item.alanPrice}" data-width="${
         item.width || 0
       }" data-height="${item.height || 0}" data-tag="${
         item.tag
@@ -723,7 +724,7 @@ function updateAllPrices(mainCategory) {
         const previousArea = currentHeight * currentWidth;
         const alanFarki = newArea - previousArea;
 
-        // Eğer alan farkı 0 veya negatifse fiyat 0 olur
+       
         calculatedPrice = item.basePrice * (alanFarki > 0 ? alanFarki : 0);
         // const priceElement = document.querySelector(
         //   `#${item.categoryName} .sizes__paragh`
@@ -734,8 +735,22 @@ function updateAllPrices(mainCategory) {
         //   )}₺`;
         // }
         break;
+        case "tasDuvar":
+          const currentWidth1 = categoryTotals[mainCategory].width; // Bu değerlerin doğru alındığını kontrol edin
+          const currentHeight1 = categoryTotals[mainCategory].height;
+          const alanFiyat = parseFloat(item.button.getAttribute("data-alan-price")) || 0; 
+          const cevreFiyat = parseFloat(item.button.getAttribute("data-price")) || 0; 
+          const cevre = ((currentHeight1 + currentWidth1)*2);
+          const alan = (currentHeight1 * currentWidth1);
+
+          // Yeni fiyat hesaplama yöntemi
+          calculatedPrice = (alan * alanFiyat) + (cevre * cevreFiyat);
+          console.log("Hesaplama Süreci:");
+          console.log(
+            `Mevcut Genişlik: ${currentWidth}, Mevcut Yükseklik: ${currentHeight}, Çevre = ${cevre} , Alan = ${alanFiyat} Hesaplanan Fiyat = ${calculatedPrice}`
+          );
       default:
-        calculatedPrice = item.basePrice; // Diğer durumlarda basePrice kullanılır
+        // calculatedPrice = item.basePrice; // Diğer durumlarda basePrice kullanılır
         break;
     }
 
