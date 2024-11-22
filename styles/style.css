@@ -327,3 +327,46 @@ margin: 0 auto 20px auto;
 .left-side .product-item .product-image{
   width: 15rem;
 }
+#details-btn{
+ background: none; 
+ border: none; 
+ margin: 0 auto; 
+ cursor:pointer; 
+ display: flex; 
+ justify-content: center; 
+ font-weight:bold;
+
+}
+.modal {
+  display: none; /* Başlangıçta görünmez */
+  position: fixed; /* Ekranda sabit kalacak */
+  z-index: 1000; /* Diğer öğelerin üstünde */
+  left: 0;
+  top: 0;
+  width: 100%; /* Tam genişlik */
+  height: 100%; /* Tam yükseklik */
+  background-color: rgba(0, 0, 0, 0.5); /* Yarı saydam arka plan */
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto; /* Üstten 15% boşluk */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Genişlik */
+  max-width: 600px; /* Maksimum genişlik */
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}

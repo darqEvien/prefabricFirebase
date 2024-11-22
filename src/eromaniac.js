@@ -37,7 +37,7 @@ async function initializeCategories() {
 
     // Initialize with the 'konti' tag
     selectedCategories.push("konti");
-    selectedCategories.push("depo")
+
     console.log(selectedCategories); // Debugging to see if 'konti' is added
 
     renderCategories(categoriesData);
@@ -347,14 +347,20 @@ function createItemHtml(categoryName, item, index) {
             <div class="title__ort">
               <h2 class="sizes__title">${item.name}</h2>
             </div>
-            <div style="background: url(${
+            <div class="details-btn" data-item='${JSON.stringify(
+             item
+           )}'style="background: url(${
               item.imageUrl
-            }); height:30vh; background-size:100% 100%;"></div>
+            }); height:30vh; background-size:100% 100%; cursor:pointer;"></div>
           </div>
-          <details>
-            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
-            <p>${item.description}</p>
-          </details>
+          <div id="details">
+          
+           <button class="details-btn" data-item='${JSON.stringify(
+             item
+           )}'  id="details-btn"  >Daha Fazla Bilgi</button>
+           </div>
+           
+
           <hr>
           <div class="sizes__desc">
             <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${
@@ -372,6 +378,7 @@ function createItemHtml(categoryName, item, index) {
         item.tag
       }" class="button-6 proButs">Seç</button>
         </div>`;
+
       break;
 
     case "tasDuvar":
@@ -402,11 +409,11 @@ function createItemHtml(categoryName, item, index) {
           </div>
           <button data-category="${categoryName}" data-img="${
         item.imageUrl
-      }" data-index="${index}" data-price="${item.price}" data-alan-price="${item.alanPrice}" data-width="${
-        item.width || 0
-      }" data-height="${item.height || 0}" data-tag="${
-        item.tag
-      }" class="button-6 proButs">Seç</button>
+      }" data-index="${index}" data-price="${item.price}" data-alan-price="${
+        item.alanPrice
+      }" data-width="${item.width || 0}" data-height="${
+        item.height || 0
+      }" data-tag="${item.tag}" class="button-6 proButs">Seç</button>
         </div>`;
       break;
 
@@ -476,7 +483,7 @@ function updateItemSizesOnSelection() {
       const height = parseFloat(itemButton.getAttribute("data-height")) || 0;
       const price = parseFloat(itemButton.getAttribute("data-price")) || 0;
       const isSelected = itemButton.classList.contains("selected");
-   // Öğenin seçili olup olmadığını kontrol et
+      // Öğenin seçili olup olmadığını kontrol et
 
       if (isSelected) {
         anySelected = true; // Eğer bir öğe seçiliyse bayrağı güncelle
@@ -494,7 +501,12 @@ function updateItemSizesOnSelection() {
           item.querySelector(".sizes__size").textContent = ` ${
             (mainWidth + width) * (mainHeight + height)
           }m²`;
-          item.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color: green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
+          item.querySelector(
+            ".sizes__paragh"
+          ).innerHTML = `Fark:<br><span style="color: green;">+${(
+            ((mainWidth + width) * (mainHeight + height) - mainArea) *
+            price
+          ).toLocaleString("tr-TR")}₺</span>`;
         } else {
           // Hem width hem de height geçerli
           const newArea = (mainWidth + width) * (mainHeight + height); // Alanı hesapla
@@ -504,7 +516,12 @@ function updateItemSizesOnSelection() {
           item.querySelector(".sizes__size").textContent = ` ${
             (mainWidth + width) * (mainHeight + height)
           }m²`;
-          item.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
+          item.querySelector(
+            ".sizes__paragh"
+          ).innerHTML = `Fark:<br><span style="color:green;">+${(
+            ((mainWidth + width) * (mainHeight + height) - mainArea) *
+            price
+          ).toLocaleString("tr-TR")}₺</span>`;
         }
       } else {
         // Kategori başına isSelected true olduğunda
@@ -518,7 +535,8 @@ function updateItemSizesOnSelection() {
               parseFloat(innerButton.getAttribute("data-width")) || 0;
             const innerHeight =
               parseFloat(innerButton.getAttribute("data-height")) || 0;
-            const innerPrice = parseFloat(innerButton.getAttribute("data-price")) || 0;
+            const innerPrice =
+              parseFloat(innerButton.getAttribute("data-price")) || 0;
             if (
               (isNaN(innerWidth) || innerWidth === 0) &&
               (isNaN(innerHeight) || innerHeight === 0)
@@ -531,7 +549,12 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__size").textContent = ` ${
                 (mainWidth + width) * (mainHeight + height)
               }m²`;
-              innerItem.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
+              innerItem.querySelector(
+                ".sizes__paragh"
+              ).innerHTML = `Fark:<br><span style="color:green;">+${(
+                ((mainWidth + width) * (mainHeight + height) - mainArea) *
+                price
+              ).toLocaleString("tr-TR")}₺</span>`;
             } else {
               // Width veya height değeri tanımlı (geçerli) olan diğer öğeler
               const newArea = (mainWidth + width) * (mainHeight + height);
@@ -541,7 +564,12 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__size").textContent = ` ${
                 (mainWidth + width) * (mainHeight + height)
               }m²`;
-              innerItem.querySelector(".sizes__paragh").textContent = `Fark:<br><span style="color:green;">+${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
+              innerItem.querySelector(
+                ".sizes__paragh"
+              ).textContent = `Fark:<br><span style="color:green;">+${(
+                ((mainWidth + width) * (mainHeight + height) - mainArea) *
+                price
+              ).toLocaleString("tr-TR")}₺</span>`;
             }
           });
         } else {
@@ -570,7 +598,12 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(".sizes__size").textContent = ` ${
                 (mainWidth - width) * (mainHeight - height)
               }m²`;
-               innerItem.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:red;">-${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}₺</span>`
+              innerItem.querySelector(
+                ".sizes__paragh"
+              ).innerHTML = `Fark:<br><span style="color:red;">-${(
+                ((mainWidth + width) * (mainHeight + height) - mainArea) *
+                price
+              ).toLocaleString("tr-TR")}₺</span>`;
             } else {
               innerItem.querySelector(
                 ".sizes__title"
@@ -578,7 +611,9 @@ function updateItemSizesOnSelection() {
               innerItem.querySelector(
                 ".sizes__size"
               ).textContent = ` ${mainArea}m²`;
-               innerItem.querySelector(".sizes__paragh").innerHTML = `Fark:<br><span style="color:green;">+0₺</span>`
+              innerItem.querySelector(
+                ".sizes__paragh"
+              ).innerHTML = `Fark:<br><span style="color:green;">+0₺</span>`;
               //  ${(((mainWidth + width)*(mainHeight +height) - mainArea)*price).toLocaleString("tr-TR")}
             }
           });
@@ -724,7 +759,6 @@ function updateAllPrices(mainCategory) {
         const previousArea = currentHeight * currentWidth;
         const alanFarki = newArea - previousArea;
 
-       
         calculatedPrice = item.basePrice * (alanFarki > 0 ? alanFarki : 0);
         // const priceElement = document.querySelector(
         //   `#${item.categoryName} .sizes__paragh`
@@ -735,20 +769,22 @@ function updateAllPrices(mainCategory) {
         //   )}₺`;
         // }
         break;
-        case "tasDuvar":
-          const currentWidth1 = categoryTotals[mainCategory].width; // Bu değerlerin doğru alındığını kontrol edin
-          const currentHeight1 = categoryTotals[mainCategory].height;
-          const alanFiyat = parseFloat(item.button.getAttribute("data-alan-price")) || 0; 
-          const cevreFiyat = parseFloat(item.button.getAttribute("data-price")) || 0; 
-          const cevre = ((currentHeight1 + currentWidth1)*2);
-          const alan = (currentHeight1 * currentWidth1);
+      case "tasDuvar":
+        const tasWidth = categoryTotals[mainCategory].width; // Bu değerlerin doğru alındığını kontrol edin
+        const tasHeight = categoryTotals[mainCategory].height;
+        const alanFiyat =
+          parseFloat(item.button.getAttribute("data-alan-price")) || 0;
+        const cevreFiyat =
+          parseFloat(item.button.getAttribute("data-price")) || 0;
+        const cevre = (tasHeight + tasWidth) * 2;
+        const alan = tasHeight * tasWidth;
 
-          // Yeni fiyat hesaplama yöntemi
-          calculatedPrice = (alan * alanFiyat) + (cevre * cevreFiyat);
-          console.log("Hesaplama Süreci:");
-          console.log(
-            `Mevcut Genişlik: ${currentWidth}, Mevcut Yükseklik: ${currentHeight}, Çevre = ${cevre} , Alan = ${alanFiyat} Hesaplanan Fiyat = ${calculatedPrice}`
-          );
+        // Yeni fiyat hesaplama yöntemi
+        calculatedPrice = alan * alanFiyat + cevre * cevreFiyat;
+        console.log("Hesaplama Süreci:");
+        console.log(
+          `Mevcut Genişlik: ${currentWidth}, Mevcut Yükseklik: ${currentHeight}, Çevre = ${cevre} , Alan = ${alanFiyat} Hesaplanan Fiyat = ${calculatedPrice}`
+        );
       default:
         // calculatedPrice = item.basePrice; // Diğer durumlarda basePrice kullanılır
         break;
@@ -808,7 +844,7 @@ function calculatePrice(item, category, mainCategory) {
 
   switch (category.priceFormat) {
     case "tekil":
-      calculatePrice = item.price // Tekil fiyat görünmeyecek
+      calculatePrice = item.price; // Tekil fiyat görünmeyecek
     case "metrekare":
       calculatedPrice = item.price * (width * height);
       break;
@@ -844,8 +880,8 @@ function selectItem(button, categoryName, mainCategory) {
     const basePrice = parseFloat(button.getAttribute("data-price")) || 0;
     const width = parseFloat(button.getAttribute("data-width")) || 0;
     const height = parseFloat(button.getAttribute("data-height")) || 0;
+    const tag = button.getAttribute("data-tag");
     const parentDiv = button.closest(".focus-item");
-    const category = categoriesData[categoryName];
 
     currentWidth = categoryTotals[mainCategory].width; // 2.5
     currentHeight = categoryTotals[mainCategory].height;
@@ -874,8 +910,19 @@ function selectItem(button, categoryName, mainCategory) {
       imageUrl: button.getAttribute("data-img"),
       title: parentDiv.querySelector(".sizes__title").textContent,
     });
-    
 
+    const tags = parentDiv
+      .getAttribute("data-tag")
+      .split(",")
+      .map((t) => t.trim());
+
+    selectedTagsPerCategory[categoryName] = tags;
+    const eroTags = button.getAttribute("data-tag").split(/\s*,\s*(?:,\s*)*/);
+
+    for (let i = 0; i < eroTags.length; i++) {
+      let item = eroTags[i];
+      selectedCategories.push(item);
+    }
     selectedItemsPerCategory[categoryName] = button;
     updateAllPrices(mainCategory);
     updateSelectedProductsDisplay();
@@ -895,6 +942,7 @@ function deselectItem(button, categoryName, mainCategory) {
     const basePrice = parseFloat(button.getAttribute("data-price")) || 0;
     const width = parseFloat(button.getAttribute("data-width")) || 0;
     const height = parseFloat(button.getAttribute("data-height")) || 0;
+    const tag = button.getAttribute("data-tag");
     const newWidth = currentWidth + width; // yeni genişlik
     const newHeight = currentHeight + height; // yeni yükseklik
     const newArea = newWidth * newHeight; // yeni toplam alan
@@ -918,11 +966,17 @@ function deselectItem(button, categoryName, mainCategory) {
     categoryTotals[mainCategory].items = categoryTotals[
       mainCategory
     ].items.filter((item) => item.button !== button);
+    const eroTags = button.getAttribute("data-tag").split(/\s*,\s*(?:,\s*)*/);
 
+    for (let i = 0; i < eroTags.length; i++) {
+      let item = eroTags[i];
+      selectedCategories.splice(item);
+    }
     // Update prices for subcategories
     updateAllPrices(mainCategory);
     updateItemSizesOnSelection();
     filterCategoriesByTags();
+    selectedCategories.splice(tag);
   }
 }
 function filterCategoriesByTags() {
@@ -1032,23 +1086,28 @@ function removeSelectedPrice(price) {
 }
 // Update total price
 function updateTotalPrice() {
-  const totalSection = document.querySelector('#total__section');
-  if(totalSection.style.display === "none"){
+  const totalSection = document.querySelector("#total__section");
+  if (totalSection.style.display === "none") {
     totalSection.style.display = "block";
   }
-  
+
   const grandTotal = Object.values(categoryTotals).reduce(
     (acc, curr) => acc + curr.price,
     0
-  )
+  );
   const firstCategory = Object.values(categoryTotals)[0]; // İlk öğeyi al
   const grandTotalWidth = firstCategory?.width || 0; // İlk öğenin genişliği
-  const grandTotalHeight = firstCategory?.height || 0; 
-  
-  
-  document.getElementById("total").textContent = ` ${grandTotal.toLocaleString()}₺`;
-  document.getElementById("total-cevre").textContent = `${grandTotalWidth}x${grandTotalHeight} (${grandTotalHeight * grandTotalWidth}m²)`
-  if(document.getElementById("total").textContent === ` 0₺`){
+  const grandTotalHeight = firstCategory?.height || 0;
+
+  document.getElementById(
+    "total"
+  ).textContent = ` ${grandTotal.toLocaleString()}₺`;
+  document.getElementById(
+    "total-cevre"
+  ).textContent = `${grandTotalWidth}x${grandTotalHeight} (${
+    grandTotalHeight * grandTotalWidth
+  }m²)`;
+  if (document.getElementById("total").textContent === ` 0₺`) {
     totalSection.style.display = "none";
   }
 }
@@ -1198,34 +1257,53 @@ function updateSelectedProductsDisplay() {
   sonucContainer.insertAdjacentHTML("beforeend", formHTML);
 }
 // Detayları gösteren modal fonksiyonu
+// Ana içerik alanına olay dinleyicisi ekleyin
+document.querySelector('.main-content').addEventListener('click', function(event) {
+  if (event.target.classList.contains('details-btn')) {
+      const itemData = event.target.getAttribute('data-item');
+
+      try {
+          if (itemData) {
+              const parsedItemData = JSON.parse(itemData);
+              showDetails(parsedItemData);
+          } else {
+              console.error("Item data is null or undefined");
+          }
+      } catch (error) {
+          console.error("Error parsing item data:", error);
+      }
+  }
+});
+// Modal gösterim işlevi
 function showDetails(item) {
-  const modal = document.createElement("div");
-  modal.classList.add("modal");
-  modal.innerHTML = `
-    <div class="modal-content">
-      <span class="close-button">&times;</span>
-      <h2>${item.categoryName}</h2>
-      <img src="${item.imageUrl}" alt="${
-    item.categoryName
-  }" class="modal-image">
-      <p>Boyut: ${item.width} x ${item.height} m</p>
-      <p>Alan: ${item.area} m²</p>
-      <p>Toplam Fiyat: ${item.price.toLocaleString("tr-TR")} ₺</p>
-    </div>
-  `;
+  if (!item) {
+      console.error("Item is null or undefined");
+      return;
+  }
 
-  document.body.appendChild(modal);
+  // Modal içeriğini güncelle
+  document.getElementById("modal-title").textContent = item.name;
+  document.getElementById("modal-image").src = item.imageUrl;
+  document.getElementById("modal-description").textContent = item.description;
+  document.getElementById("modal-dimensions").textContent = `Boyut: ${item.width} x ${item.height} m`;
+  document.getElementById("modal-area").textContent = `Alan: ${item.size} m²`;
 
+  // Modal'ı göster
+  const modal = document.getElementById("modal");
+  modal.style.display = "block";
+
+  // Kapatma butonuna tıklama olayını ekle
   const closeButton = modal.querySelector(".close-button");
-  closeButton.addEventListener("click", () => {
-    modal.remove();
-  });
+  closeButton.onclick = function() {
+      modal.style.display = "none";
+  };
 
-  window.addEventListener("click", (event) => {
-    if (event.target === modal) {
-      modal.remove();
-    }
-  });
+  // Modal dışına tıklanıldığında kapatma
+  window.onclick = function(event) {
+      if (event.target === modal) {
+          modal.style.display = "none";
+      }
+  };
 }
 // Initialize categories on page load
 document.addEventListener("DOMContentLoaded", initializeCategories);
