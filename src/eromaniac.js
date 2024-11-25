@@ -36,7 +36,7 @@ async function initializeCategories() {
     });
 
     // Initialize with the 'konti' tag
-    selectedCategories.push("konti");
+    selectedCategories.push("genel");
 
     console.log(selectedCategories); // Debugging to see if 'konti' is added
 
@@ -88,8 +88,10 @@ function renderCategory(categoryName, category) {
   );
 
   const container = document.getElementById(categoryName);
+  
   const sortedItems = category.documents.sort((a, b) => a.order - b.order);
 
+  
   // Ürünleri toplu şekilde ekleyelim
   const itemsHTML = sortedItems
     .map((item, index) => createItemHtml(categoryName, item, index))
@@ -680,7 +682,7 @@ function handleItemClick(button, categoriesData) {
     // Seçilen ürünleri güncelle
     updateItemSizesOnSelection();
     updateSelectedProductsDisplay();
-    selectedCategories.push("konti");
+    
     filterCategoriesByTags();
     delete button.dataset.processing;
   });
@@ -921,8 +923,10 @@ function selectItem(button, categoryName, mainCategory) {
 
     for (let i = 0; i < eroTags.length; i++) {
       let item = eroTags[i];
+      console.log(item)
       selectedCategories.push(item);
     }
+    console.log(selectedCategories);
     selectedItemsPerCategory[categoryName] = button;
     updateAllPrices(mainCategory);
     updateSelectedProductsDisplay();
@@ -967,18 +971,22 @@ function deselectItem(button, categoryName, mainCategory) {
       mainCategory
     ].items.filter((item) => item.button !== button);
     const eroTags = button.getAttribute("data-tag").split(/\s*,\s*(?:,\s*)*/);
-
-    for (let i = 0; i < eroTags.length; i++) {
-      let item = eroTags[i];
-      selectedCategories.splice(item);
+   eroTags.forEach(tags =>{
+    const index = selectedCategories.indexOf(tags);
+    if(index > -1){
+      selectedCategories.splice(index, 1);
     }
+   })
+    
+    console.log(selectedCategories);
     // Update prices for subcategories
     updateAllPrices(mainCategory);
     updateItemSizesOnSelection();
     filterCategoriesByTags();
-    selectedCategories.splice(tag);
+   
   }
 }
+
 function filterCategoriesByTags() {
   const hasSelectedTags = selectedCategories.length > 0;
 
@@ -995,8 +1003,26 @@ function filterCategoriesByTags() {
       categoryElement.style.display =
         hasSelectedTags && !matchesTags ? "none" : "block";
     }
+    filterCategoryItemsByTags(categoryName,categoriesData);
   });
   filterSidebarItemsByTags();
+}
+function filterCategoryItemsByTags(categoryName, categoriesData) {
+  // selectedCategories dizisinden seçilen etiketleri al
+  const selectedTags = selectedCategories; // Bu diziyi doğrudan kullanıyoruz
+  const container = document.getElementById(categoryName);
+  
+  if (!container) return;
+
+  const items = container.querySelectorAll(".focus-item");
+
+  items.forEach((item) => {
+    const itemTags = item.getAttribute("data-tag").split(",").map(t => t.trim());
+    const hasMatchingTag = selectedTags.length === 0 || itemTags.some(tag => selectedTags.includes(tag));
+    
+    // Eşleşen etiket varsa öğeyi göster, aksi takdirde gizle
+    item.style.display = hasMatchingTag ? "grid" : "none";
+  });
 }
 
 function filterSidebarItemsByTags() {
@@ -1171,6 +1197,8 @@ function updateSubcategoryPrices(parentCategoryName) {
     }
   });
 }
+
+
 
 function updateSelectedProductsDisplay() {
   const sonucContainer = document.getElementById("sonuc__container");
