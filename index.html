@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="icon" href="soz_prefabrik_logo_png.png">
 </head>
+
 <body>
     <div class="container">
         <!-- Sidebar -->
@@ -20,33 +27,24 @@
                 </div>
                 <!-- Options -->
                 <div id="sidebarMenu">
-                
-                <div class="sidebar-item">
+
                     <div class="sidebar-item">
-                        <button class="button-6" id="sonucBtn">Sonuç</button>
+                        <div class="sidebar-item">
+                            <button class="button-6" id="sonucBtn">Sonuç</button>
+                        </div>
                     </div>
-                </div>
-                <div id="total__section" style="display: none;">
-                    <h2>Toplam</h2>
-                    <div class="total__align">
-                        <h2 id="total-perimeter">Ebat: <span id="total-cevre">0x0</span></h2>
-                        <h2>Fiyat:<span id="total"> 0₺</span></h2>
+                    <div id="total__section" style="display: none;">
+                        <h2>Toplam</h2>
+                        <div class="total__align">
+                            <h2 id="total-perimeter">Ebat: <span id="total-cevre">0x0</span></h2>
+                            <h2>Fiyat:<span id="total"> 0₺</span></h2>
+                        </div>
                     </div>
-                </div>
-                <!-- Buy Button -->
-                <button class="buy-button">Randevu Al</button>
-            </div>
-            </div>
-            <div id="modal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <span class="close-button">&times;</span>
-                    <h2 id="modal-title"></h2>
-                    <img id="modal-image" src="" alt="" class="modal-image">
-                    <p id="modal-description"></p>
-                    <p id="modal-dimensions"></p>
-                    <p id="modal-area"></p>
+                    <!-- Buy Button -->
+                    <button class="buy-button">Randevu Al</button>
                 </div>
             </div>
+            
         </div>
         <!-- Right Content Area -->
         <div class="main-content">
@@ -56,9 +54,26 @@
             </div>
             <hr>
             <div id="sonuc__container"></div>
+            <div id="modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close-button">&times;</span>
+
+                    <div class="modal-ero">
+                        <h2 id="modal-title"></h2>
+
+                        <div class="owl-carousel" id="modal-carousel">
+                            <!-- Resimler buraya eklenecek -->
+                        </div>
+                        <p id="modal-description"></p>
+                        <p id="modal-dimensions"></p>
+                        <p id="modal-area"></p>
+                    </div>
+                </div>
+            </div>
         </div>
         <script type="module" src="./src/main.js"></script>
-     
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
 </body>
 
 </html>

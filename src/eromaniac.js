@@ -122,11 +122,9 @@ function renderSubcategoriesRecursively(parentCategoryName, categoriesData) {
   subcategories.forEach(([subCategoryName, subCategory]) => {
     const subCategoryHTML = `
       <div class="subcategory-container" id="${subCategoryName}_container" data-parent="${parentCategoryName}">
-        <h3 id="${subCategoryName}__title">${
-      subCategory.title || "Select"
-    } Seçiniz</h3>
+        <h3 id="${subCategoryName}__title">${subCategory.title || "Select"}Seçiniz</h3>
+        </div>
         <div id="${subCategoryName}" class="focus-grid"></div>
-      </div>
     `;
 
     parentContainer.insertAdjacentHTML("beforeend", subCategoryHTML);
@@ -205,6 +203,8 @@ function createItemHtml(categoryName, item, index) {
   let priceDisplay;
   let itemHTML = "";
   let dynamicSize = 0;
+  const first = Array.isArray(item.imageUrl) ? item.imageUrl[0] : item.imageUrl; 
+
   if (category.priceFormat === "metrekare") {
     const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
     priceDisplay = `${formattedBasePrice}₺/m²`;
@@ -236,9 +236,9 @@ function createItemHtml(categoryName, item, index) {
             <div class="title__ort">
               <h2 class="sizes__title">${item.name}</h2>
             </div>
-            <div style="background: url(${
-              item.imageUrl
-            }); height:30vh; background-size:100% 100%;"></div>
+            <div  class="itemImg" style="background: url(${
+              item.images[0]
+            })";></div>
           </div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
@@ -279,10 +279,9 @@ function createItemHtml(categoryName, item, index) {
             <div class="title__ort">
               <h2 class="sizes__title">${item.name}</h2>
             </div>
-            <div style="background: url(${
-              item.imageUrl
-            }); height:30vh; background-size:100% 100%;"></div>
-          </div>
+        <div  class="itemImg" style="background: url(${
+              item.images[0]
+            })";></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
@@ -313,10 +312,9 @@ function createItemHtml(categoryName, item, index) {
             <div class="title__ort">
               <h2 class="sizes__title">${item.name}</h2>
             </div>
-            <div style="background: url(${
-              item.imageUrl
-            }); height:30vh; background-size:100% 100%;"></div>
-          </div>
+           <div  class="itemImg" style="background: url(${
+              item.images[0]
+            })";></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
@@ -349,17 +347,12 @@ function createItemHtml(categoryName, item, index) {
             <div class="title__ort">
               <h2 class="sizes__title">${item.name}</h2>
             </div>
-            <div class="details-btn" data-item='${JSON.stringify(
-             item
-           )}'style="background: url(${
-              item.imageUrl
-            }); height:30vh; background-size:100% 100%; cursor:pointer;"></div>
+            <div class="details-btn" data-item='${JSON.stringify(item)}'style="background: url(${item.images[0]}); 
+            height:30vh; background-size:contain; background-repeat:no-repeat; background-position:center; cursor:pointer; text-align:center; "></div>
           </div>
           <div id="details">
           
-           <button class="details-btn" data-item='${JSON.stringify(
-             item
-           )}'  id="details-btn"  >Daha Fazla Bilgi</button>
+           <button class="details-btn" data-item='${JSON.stringify(item)}' id="details-btn"  >Daha Fazla Bilgi</button>
            </div>
            
 
@@ -373,7 +366,7 @@ function createItemHtml(categoryName, item, index) {
             )}₺</p>
           </div>
           <button data-category="${categoryName}" data-img="${
-        item.imageUrl
+        item.images[0]
       }" data-index="${index}" data-price="${item.price}" data-width="${
         item.width || 0
       }" data-height="${item.height || 0}" data-tag="${
@@ -392,10 +385,9 @@ function createItemHtml(categoryName, item, index) {
             <div class="title__ort">
               <h2 class="sizes__title">${item.name}</h2>
             </div>
-            <div style="background: url(${
-              item.imageUrl
-            }); height:30vh; background-size:100% 100%;"></div>
-          </div>
+            <div  class="itemImg" style="background: url(${
+              item.images[0]
+            })";></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
@@ -428,10 +420,9 @@ function createItemHtml(categoryName, item, index) {
             <div class="title__ort">
               <h2 class="sizes__title">${item.name}</h2>
             </div>
-            <div style="background: url(${
-              item.imageUrl
-            }); height:30vh; background-size:100% 100%;"></div>
-          </div>
+            <div  class="itemImg" style="background: url(${
+              item.images[0]
+            })";></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
@@ -1311,10 +1302,30 @@ function showDetails(item) {
 
   // Modal içeriğini güncelle
   document.getElementById("modal-title").textContent = item.name;
-  document.getElementById("modal-image").src = item.imageUrl;
   document.getElementById("modal-description").textContent = item.description;
   document.getElementById("modal-dimensions").textContent = `Boyut: ${item.width} x ${item.height} m`;
   document.getElementById("modal-area").textContent = `Alan: ${item.size} m²`;
+
+  const carousel = document.getElementById("modal-carousel");
+    carousel.innerHTML = ""; // Önceki içerikleri temizle
+
+    item.images.forEach(imageUrl => {
+        const imgElement = document.createElement("div");
+        imgElement.classList.add("item"); // OwlCarousel için gerekli sınıf
+        imgElement.innerHTML = `<img src="${imageUrl}" alt="${item.name}" class="modal-image">`;
+        carousel.appendChild(imgElement);
+    });
+
+    // OwlCarousel'ı başlat
+    $(carousel).owlCarousel({
+      items: 1, // Her seferinde bir resim göster
+      loop: true, // Dönme özelliği
+      nav: true, // Önceki ve sonraki butonları göster
+      dots: true, // Dots göstermek için
+      autoplay: true, // Otomatik geçiş
+      autoplayTimeout: 2000, // 2 saniyede bir geçiş
+      autoplayHoverPause: true, // Fareyle üzerine gelindiğinde durdur
+  });
 
   // Modal'ı göster
   const modal = document.getElementById("modal");
@@ -1323,6 +1334,7 @@ function showDetails(item) {
   // Kapatma butonuna tıklama olayını ekle
   const closeButton = modal.querySelector(".close-button");
   closeButton.onclick = function() {
+    $(carousel).owlCarousel('destroy')
       modal.style.display = "none";
   };
 

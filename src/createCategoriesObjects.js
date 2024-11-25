@@ -38,6 +38,7 @@ async function getDocumentsInCategory(categoryName) {
       id: doc.id,
       width: data.width, // Geçerli bir sayı değilse 0 atayın
       height: data.height, 
+      images: data.images || [],
       ...data,
     };
   });
