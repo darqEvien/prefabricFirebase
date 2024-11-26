@@ -100,67 +100,62 @@ function renderCategory(categoryName, category) {
   container.innerHTML = itemsHTML;
 }
 
-function renderSubcategoriesRecursively(parentCategoryName, categoriesData) {
-  const subcategories = Object.entries(categoriesData)
-    .filter(([_, category]) => category.parentCategory === parentCategoryName)
-    .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+function renderSubcategoriesRecursively(parentCategoryName, categoriesData) { 
+  const subcategories = Object.entries(categoriesData) 
+      .filter(([_, category]) => category.parentCategory === parentCategoryName) 
+      .sort((a, b) => (a[1].order || 0) - (b[1].order || 0)); 
 
-  if (subcategories.length === 0) return;
+  if (subcategories.length === 0) return; 
 
-  const parentContainer = document.getElementById(
-    `${parentCategoryName}_container`
-  );
-  if (!parentContainer) return;
+  const parentContainer = document.getElementById(`${parentCategoryName}_container`); 
+  if (!parentContainer) return; 
 
-  // Mevcut alt kategorileri temizle
-  const existingSubcategories = document.querySelectorAll(
-    `[data-parent="${parentCategoryName}"]`
-  );
-  existingSubcategories.forEach((el) => el.remove());
+  // Mevcut alt kategorileri temizle 
+  const existingSubcategories = document.querySelectorAll(`[data-parent="${parentCategoryName}"]`); 
+  existingSubcategories.forEach((el) => el.remove()); 
 
-  // Alt kategorileri render et
-  subcategories.forEach(([subCategoryName, subCategory]) => {
-    const subCategoryHTML = `
-      <div class="subcategory-container" id="${subCategoryName}_container" data-parent="${parentCategoryName}">
-        <h3 id="${subCategoryName}__title">${subCategory.title || "Select"}Seçiniz</h3>
-        </div>
-        <div id="${subCategoryName}" class="focus-grid"></div>
-    `;
+  // Alt kategorileri render et 
+  subcategories.forEach(([subCategoryName, subCategory]) => { 
+      const subCategoryHTML = ` 
+          <div class="subcategory-container" id="${subCategoryName}_container" data-parent="${parentCategoryName}"> 
+              <h3 id="${subCategoryName}__title">${subCategory.title || "Select"} Seçiniz</h3> 
+              <div id="${subCategoryName}" class="focus-grid"></div> 
+          </div>`; 
 
-    parentContainer.insertAdjacentHTML("beforeend", subCategoryHTML);
+      parentContainer.insertAdjacentHTML("beforeend", subCategoryHTML); 
 
-    const container = document.getElementById(subCategoryName);
-    if (!container) return;
+      const container = document.getElementById(subCategoryName); 
+      if (!container) return; 
 
-    let sortedItems = subCategory.documents.sort(
-      (a, b) => (a.order || 0) - (b.order || 0)
-    );
+      let sortedItems = subCategory.documents.sort( 
+          (a, b) => (a.order || 0) - (b.order || 0) 
+      ); 
 
-    // Tag filtrelemesi
-    const selectedParentItem = selectedItemsPerCategory[parentCategoryName];
-    if (selectedParentItem) {
-      const parentDiv = selectedParentItem.closest(".focus-item");
-      const selectedParentTags = parentDiv
-        .getAttribute("data-tag")
-        .split(",")
-        .map((t) => t.trim());
+      // Tag filtrelemesi 
+      const selectedParentItem = selectedItemsPerCategory[parentCategoryName]; 
+      if (selectedParentItem) { 
+          const parentDiv = selectedParentItem.closest(".focus-item"); 
+          const selectedParentTags = parentDiv 
+              .getAttribute("data-tag") 
+              .split(",") 
+              .map((t) => t.trim()); 
 
-      if (selectedParentTags.length > 0) {
-        sortedItems = sortedItems.filter(
-          (item) =>
-            item.tag && selectedParentTags.some((tag) => item.tag.includes(tag))
-        );
-      }
-    }
+          if (selectedParentTags.length > 0) { 
+              sortedItems = sortedItems.filter( 
+                  (item) => 
+                      item.tag && selectedParentTags.some((tag) => item.tag.includes(tag)) 
+              ); 
+          } 
+      } 
 
-    const itemsHTML = sortedItems
-      .map((item, index) => createItemHtml(subCategoryName, item, index))
-      .join("");
+      // Ürünleri toplu şekilde ekleyelim 
+      sortedItems.forEach((item, index) => {
+          const itemHTML = createItemHtml(subCategoryName, item, index);
+          container.insertAdjacentHTML("beforeend", itemHTML); // Her bir focus-item'ı focus-grid içine ekleyin
+      });
+  }); 
 
-    container.innerHTML = itemsHTML;
-  });
-
-  addEventListeners(categoriesData);
+  addEventListeners(categoriesData); 
 }
 
 function hideSubcategoriesRecursively(categoryName, categoriesData) {
@@ -238,7 +233,7 @@ function createItemHtml(categoryName, item, index) {
             </div>
             <div  class="itemImg" style="background: url(${
               item.images[0]
-            })";></div>
+            }); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
           </div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
@@ -281,7 +276,7 @@ function createItemHtml(categoryName, item, index) {
             </div>
         <div  class="itemImg" style="background: url(${
               item.images[0]
-            })";></div>
+            }); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
@@ -314,7 +309,7 @@ function createItemHtml(categoryName, item, index) {
             </div>
            <div  class="itemImg" style="background: url(${
               item.images[0]
-            })";></div>
+            })background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
@@ -387,7 +382,7 @@ function createItemHtml(categoryName, item, index) {
             </div>
             <div  class="itemImg" style="background: url(${
               item.images[0]
-            })";></div>
+            }); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
@@ -422,7 +417,7 @@ function createItemHtml(categoryName, item, index) {
             </div>
             <div  class="itemImg" style="background: url(${
               item.images[0]
-            })";></div>
+            }); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
           <details>
             <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
             <p>${item.description}</p>
