@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-
+import { getAnalytics } from "firebase/analytics";
 // Firebase yapılandırman
 const firebaseConfig = {
     apiKey: "AIzaSyA8UsQZNNkhW-76nND5uysnTp65E-OEcik",
@@ -15,5 +15,5 @@ const firebaseConfig = {
 // Firebase uygulamasını başlat
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-export { db };
+const analytics = getAnalytics(app);
+export { db,analytics };
