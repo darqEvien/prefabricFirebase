@@ -11,7 +11,8 @@ async function getCategories() {
     select: doc.data().select,
     parentCategory: doc.data().parentCategory,
     priceFormat: doc.data().priceFormat,
-    catTag: doc.data().tags, // Yeni eklenen alan
+    catTag: doc.data().tags,
+    accessibility: doc.data().accessibility !== undefined ? doc.data().accessibility : false,// Yeni eklenen alan
     ...doc.data(),
   }));
 }
@@ -39,6 +40,7 @@ async function getDocumentsInCategory(categoryName) {
       width: data.width, // Geçerli bir sayı değilse 0 atayın
       height: data.height, 
       images: data.images || [],
+      accessibility: data.accessibility,
       ...data,
     };
   });
@@ -52,27 +54,29 @@ async function createCategoryObjects() {
     for (const category of categories) {
       const categoryName = category.propertyName;
       const documents = await getDocumentsInCategory(categoryName);
-
-      categoriesData[categoryName] = {
-        title: categoriesTitles.find((title) => title === category.title),
-        select: category.select,
-        parentCategory: category.parentCategory,
-        priceFormat: category.priceFormat,
-        catTag: category.tags,
-        documents: documents.map((doc) => ({
-          id: doc.id,
-          ...doc,
-          alanPrice: doc.alanPrice || 0,
-          // Eğer priceFormat 'tekil' veya 'metrekare' ise ve width ve height varsa, alanı hesapla
-          area: (category.priceFormat === 'tekil' || category.priceFormat === 'metrekare') && doc.width && doc.height
-            ? doc.width * doc.height
-            : null,
-          // Eğer priceFormat 'cevre' ise ve width ve height varsa, çevreyi hesapla
-          perimeter: category.priceFormat === 'cevre' && doc.width && doc.height
-            ? 2 * (doc.width + doc.height)
-            : null,
-        })),
-      };
+      if(category.accessibility){
+        categoriesData[categoryName] = {
+          title: categoriesTitles.find((title) => title === category.title),
+          select: category.select,
+          parentCategory: category.parentCategory,
+          priceFormat: category.priceFormat,
+          catTag: category.tags,
+          documents: documents.map((doc) => ({
+            id: doc.id,
+            ...doc,
+            alanPrice: doc.alanPrice || 0,
+            // Eğer priceFormat 'tekil' veya 'metrekare' ise ve width ve height varsa, alanı hesapla
+            area: (category.priceFormat === 'tekil' || category.priceFormat === 'metrekare') && doc.width && doc.height
+              ? doc.width * doc.height
+              : null,
+            // Eğer priceFormat 'cevre' ise ve width ve height varsa, çevreyi hesapla
+            perimeter: category.priceFormat === 'cevre' && doc.width && doc.height
+              ? 2 * (doc.width + doc.height)
+              : null,
+          })),
+        };
+      }
+      
     }
 
     console.log(categoriesData);

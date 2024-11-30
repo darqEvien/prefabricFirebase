@@ -20,20 +20,21 @@ async function initializeCategories() {
   try {
     categoriesData = await fetchCategoriesData();
     Object.entries(categoriesData).forEach(([categoryName, category]) => {
-      if (!category.parentCategory) {
-        categoryTotals[categoryName] = {
-          title: category.title,
-          img: category.imageUrl || "",
-          price: 0,
-          width: 0,
-          height: 0,
-          previousArea: 0,
-          area: 0,
-          items: [],
-          parentCategory: category.parentCategory,
-          catTag: category.tags,
-        };
+        if (!category.parentCategory) {
+          categoryTotals[categoryName] = {
+            title: category.title,
+            img: category.imageUrl || "",
+            price: 0,
+            width: 0,
+            height: 0,
+            previousArea: 0,
+            area: 0,
+            items: [],
+            parentCategory: category.parentCategory,
+            catTag: category.tags,
+          };
       }
+      
     });
 
     // Initialize with the 'konti' tag
@@ -59,12 +60,15 @@ function renderCategories(categoriesData) {
 
   // Ana kategorileri render edelim
   for (const [categoryName, category] of sortedCategories) {
-    if (!category.parentCategory || category.parentCategory === "") {
-      categoryNames.push(categoryName);
-      tagFilters[categoryName] = [];
-
-      renderCategory(categoryName, category);
-    }
+  
+      if (!category.parentCategory || category.parentCategory === "") {
+        categoryNames.push(categoryName);
+        tagFilters[categoryName] = [];
+  
+        renderCategory(categoryName, category);
+      }
+    
+   
   }
 }
 // Tek bir kategoriyi render eden yardımcı fonksiyon
@@ -91,7 +95,9 @@ function renderCategory(categoryName, category) {
 
   const container = document.getElementById(categoryName);
 
-  const sortedItems = category.documents.sort((a, b) => a.order - b.order);
+    const sortedItems = category.documents
+    .filter(item => item.accessibility) // accessibility kontrolü
+    .sort((a, b) => a.order - b.order);
 
   // Ürünleri toplu şekilde ekleyelim
   const itemsHTML = sortedItems
@@ -134,7 +140,7 @@ function renderSubcategoriesRecursively(parentCategoryName, categoriesData) {
     const container = document.getElementById(subCategoryName);
     if (!container) return;
 
-    let sortedItems = subCategory.documents.sort(
+    let sortedItems = subCategory.documents.filter(item => item.accessibility) .sort(
       (a, b) => (a.order || 0) - (b.order || 0)
     );
 
@@ -362,7 +368,8 @@ function createItemHtml(categoryName, item, index) {
         </div>`;
 
       break;
-
+      
+      
     case "tasDuvar":
       itemHTML = `
         <div class="focus-item" id="${categoryName}Div" data-tag="${
@@ -396,6 +403,45 @@ function createItemHtml(categoryName, item, index) {
         item.alanPrice
       }" class="button-6 proButs">Seç</button>
         </div>`;
+      break;
+      case "konti":
+      itemHTML = `
+        <div class="focus-item" id="${categoryName}Div" data-tag="${
+        item.tag || ""
+      }">
+          <div class="ero__ort">
+            <div class="title__ort">
+              <h2 class="sizes__title">${item.name}</h2>
+            </div>
+            <div class="details-btn" data-item='${JSON.stringify(
+              item
+            )}'style="background: url(${item.images[0]}); 
+            height:30vh; background-size:contain; background-repeat:no-repeat; background-position:center; cursor:pointer; text-align:center; "></div>
+          </div>
+          <div id="details">
+          
+           <button class="details-btn" data-item='${JSON.stringify(
+             item
+           )}' id="details-btn"  >Daha Fazla Bilgi</button>
+           </div>
+           
+
+          <hr>
+         <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${item.size}m²</span></i></div>
+            <p class="sizes__paragh">Fiyat:<br>${(item.price/1).toLocaleString(
+              "tr-TR"
+            )}₺</p>
+          </div>
+          <button data-category="${categoryName}" data-img="${
+        item.images[0]
+      }" data-index="${index}" data-price="${item.price}" data-width="${
+        item.width || 0
+      }" data-height="${item.height || 0}" data-tag="${
+        item.tag
+      }" data-alan="${item.size}" class="button-6 proButs">Seç</button>
+        </div>`;
+
       break;
     default:
       itemHTML = `
@@ -825,6 +871,9 @@ function updateAllPrices(mainCategory) {
     // Fiyat formatına göre hesaplama yap
     switch (category.priceFormat) {
       case "tekil":
+        calculatedPrice = item.basePrice; // Sadece basePrice kullanılır
+        break;
+        case "konti":
         calculatedPrice = item.basePrice; // Sadece basePrice kullanılır
         break;
       case "metrekare":
