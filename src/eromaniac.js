@@ -710,34 +710,72 @@ function updateItemSizesOnSelection() {
         }
       });
     }else if(category.priceFormat === "tekil"){
-     const mainWidth = mainCategoryTotals.width || 0;
-      const mainHeight = mainCategoryTotals.height || 0;
-      const alan = mainWidth * mainHeight;
-      const cevre = (mainHeight + mainWidth) * 2;
+
+
+      
       const items = document.querySelectorAll(`#${categoryName} .focus-item`);
+      let selectedItemPrice = 0;
+      let selectedItem = null;
 
-    
-
+      // Seçilen öğeyi bul ve fiyatını al
       items.forEach((item) => {
         const itemButton = item.querySelector(".proButs");
-        const itemAlan = parseFloat(itemButton.getAttribute("data-alan")) || 0;
-        const price = parseFloat(itemButton.getAttribute("data-price")) || 0;
         const isSelected = itemButton.classList.contains("selected");
+
+        if (isSelected) {
+          selectedItemPrice = parseFloat(itemButton.getAttribute("data-price")) || 0;
+          selectedItem = item; // Seçilen öğeyi sakla
+        }
+      });
+
+      // Diğer öğelerin fiyatlarını güncelle ve farkları hesapla
+      items.forEach((item) => {
+        const itemButton = item.querySelector(".proButs");
+        const itemPrice = parseFloat(itemButton.getAttribute("data-price")) || 0;
         const itemWidth = parseFloat(itemButton.getAttribute("data-width")) || 0;
-        const itemHeight = parseFloat(itemButton.getAttribute("data-height")) || 0;
+    const itemHeight = parseFloat(itemButton.getAttribute("data-height")) || 0;
+    const itemSize = parseFloat(itemButton.getAttribute("data-size")) || 0;
+
+        const priceDifference = itemPrice - selectedItemPrice;
+
+        // Fiyatı göster
+        const priceDisplay = item.querySelector(".sizes__paragh");
+        const sizeDisplay = item.querySelector(".sizes__size");
+        const alanText = item.querySelector(".alanText");
+        if (priceDisplay) {
+          if (!selectedItem) {
+            // Eğer hiçbir öğe seçili değilse ve fiyat 0 ise "Standart" göster
+            if (itemPrice === 0) {
+              priceDisplay.innerHTML = `Fiyat:<br>Standart`;
+            } else {
+              priceDisplay.innerHTML = `Fiyat:<br><span style="color:green;">+${itemPrice.toLocaleString("tr-TR")}₺</span>`;
+            }
+          } else {
+            // Seçilen öğe varsa, farkları göster
+            if (priceDifference > 0) {
+              priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>+${priceDifference.toLocaleString("tr-TR")}₺</span>`;
+            } else if (priceDifference < 0) {
+              priceDisplay.innerHTML = `Fark: <span style="color:red;"><br>${priceDifference.toLocaleString("tr-TR")}₺</span>`;
+            } else {
+              priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>0₺</span>`;
+            }
+          }
+        }
+        if (itemSize === 0 || itemSize === null) {
+          if (itemWidth !== 0 && itemHeight !== 0) {
+            alanText.innerHTML = `Ebatlar: <br> <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${itemWidth}x${itemHeight}</span></i>`;
+            alanText.style.display = "block"; // AlanText'i göster
+          } else {
+            alanText.style.display = "none"; // AlanText'i gizle
+            item.querySelector(".sizes__desc").style = "display:flex; flex-direction:row; justify-content:flex-start;"; 
+          }
+        } else {
+          sizeDisplay.innerHTML = `${itemSize}`;
+          alanText.style.display = "block"; // AlanText'i göster
+         
+        }
         
-        if (!isSelected) {
-        if(itemAlan === 0  && (itemWidth !== 0 && itemHeight !== 0)){
-          item.querySelector(".alanText").innerHTML = `Ebatlar: <br>
-          <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${itemWidth}x${itemHeight}</span></i>`;
-        }
-        else if(itemAlan === 0){
-          item.querySelector(".alanText").style = "display: none";
-          item.querySelector(".sizes__desc").style = "display:flex; flex-direction:row; justify-content:flex-start;"
-        }
-        else{
-        return}
-        } 
+        
       });
     }
   });
