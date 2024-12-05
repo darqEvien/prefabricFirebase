@@ -7,7 +7,7 @@
     <title>Söz Çelik Prefabrik Planlayıcı</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="stylesheet" href="/styles.css">
+  
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
     <link rel="stylesheet"
@@ -23,30 +23,24 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="stickytry">
-                <div>
-                    <!-- <img src="./Söz Çelik/veranda foto/verandalı.png" alt="Söz Çelik"> -->
-                    <h2>Söz Çelik Prefabrik Ev</h2>
-                </div>
-                <!-- Options -->
-                <div id="sidebarMenu">
-
+                <h2>Söz Çelik Prefabrik Ev</h2>
+                <div id="sidebarMenu" class="sidebar-menu">
                     <div class="sidebar-item">
-                        <div class="sidebar-item">
-                            <button class="button-6" id="sonucBtn">Sonuç</button>
-                        </div>
+                        <button class="button-6" id="sonucBtn">Sonuç</button>
                     </div>
-                    <div id="total__section" style="display: none;">
-                        <h2>Toplam</h2>
-                        <div class="total__align">
-                            <h2 id="total-perimeter">Ebat: <span id="total-cevre">0x0</span></h2>
-                            <h2>Fiyat:<span id="total"> 0₺</span></h2>
-                        </div>
-                    </div>
-                    <!-- Buy Button -->
-                    <button class="buy-button">Randevu Al</button>
+                    <!-- Diğer sidebar öğeleri buraya eklenecek -->
                 </div>
             </div>
-            
+            <div class="total__sticky">
+            <div id="total__section" style="display: none;">
+                <h2>Toplam</h2>
+                <div class="total__align">
+                    <h2 id="total-perimeter">Ebat: <span id="total-cevre">0x0</span></h2>
+                    <h2>Fiyat:<span id="total"> 0₺</span></h2>
+                </div>
+            </div>
+            <button class="buy-button">Randevu Al</button>
+        </div>
         </div>
         <!-- Right Content Area -->
         <div class="main-content">

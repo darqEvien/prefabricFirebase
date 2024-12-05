@@ -14,27 +14,28 @@ let dimensionsPerCategory = {};
 let categoryTotals = {};
 let currentWidth;
 let currentHeight;
+let kontiHeight;
+let kontiWidth;
 
 // Initialize categories
 async function initializeCategories() {
   try {
     categoriesData = await fetchCategoriesData();
     Object.entries(categoriesData).forEach(([categoryName, category]) => {
-        if (!category.parentCategory) {
-          categoryTotals[categoryName] = {
-            title: category.title,
-            img: category.imageUrl || "",
-            price: 0,
-            width: 0,
-            height: 0,
-            previousArea: 0,
-            area: 0,
-            items: [],
-            parentCategory: category.parentCategory,
-            catTag: category.tags,
-          };
+      if (!category.parentCategory) {
+        categoryTotals[categoryName] = {
+          title: category.title,
+          img: category.imageUrl || "",
+          price: 0,
+          width: 0,
+          height: 0,
+          previousArea: 0,
+          area: 0,
+          items: [],
+          parentCategory: category.parentCategory,
+          catTag: category.tags,
+        };
       }
-      
     });
 
     // Initialize with the 'konti' tag
@@ -60,15 +61,11 @@ function renderCategories(categoriesData) {
 
   // Ana kategorileri render edelim
   for (const [categoryName, category] of sortedCategories) {
-  
-      if (!category.parentCategory || category.parentCategory === "") {
-        categoryNames.push(categoryName);
-        tagFilters[categoryName] = [];
-  
-        renderCategory(categoryName, category);
-      }
-    
-   
+    if (!category.parentCategory || category.parentCategory === "") {
+      categoryNames.push(categoryName);
+      tagFilters[categoryName] = [];
+      renderCategory(categoryName, category);
+    }
   }
 }
 // Tek bir kategoriyi render eden yardımcı fonksiyon
@@ -95,8 +92,8 @@ function renderCategory(categoryName, category) {
 
   const container = document.getElementById(categoryName);
 
-    const sortedItems = category.documents
-    .filter(item => item.accessibility) // accessibility kontrolü
+  const sortedItems = category.documents
+    .filter((item) => item.accessibility) // accessibility kontrolü
     .sort((a, b) => a.order - b.order);
 
   // Ürünleri toplu şekilde ekleyelim
@@ -140,9 +137,9 @@ function renderSubcategoriesRecursively(parentCategoryName, categoriesData) {
     const container = document.getElementById(subCategoryName);
     if (!container) return;
 
-    let sortedItems = subCategory.documents.filter(item => item.accessibility) .sort(
-      (a, b) => (a.order || 0) - (b.order || 0)
-    );
+    let sortedItems = subCategory.documents
+      .filter((item) => item.accessibility)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     // Ürünleri toplu şekilde ekleyelim
     sortedItems.forEach((item, index) => {
@@ -196,72 +193,76 @@ function createItemHtml(categoryName, item, index) {
   let dynamicSize = 0;
   const first = Array.isArray(item.imageUrl) ? item.imageUrl[0] : item.imageUrl;
 
-  if (category.priceFormat === "metrekare") {
-    const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
-    priceDisplay = `${formattedBasePrice}₺/m²`;
-  } else if (category.priceFormat === "artis") {
-    const currentWidth = parseFloat(mainCategoryTotals.width) || 0;
-    const currentHeight = parseFloat(mainCategoryTotals.height) || 0;
-    const itemWidth = parseFloat(item.width) || 0;
-    const itemHeight = parseFloat(item.height) || 0;
+  // if (category.priceFormat === "metrekare") {
+  //   const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
+  //   priceDisplay = `${formattedBasePrice}₺/m²`;
+  // } else if (category.priceFormat === "artis") {
+  //   const currentWidth = parseFloat(mainCategoryTotals.width) || 0;
+  //   const currentHeight = parseFloat(mainCategoryTotals.height) || 0;
+  //   const itemWidth = parseFloat(item.width) || 0;
+  //   const itemHeight = parseFloat(item.height) || 0;
 
-    // Dinamik alan hesaplama
-    dynamicSize = (currentWidth + itemWidth) * (currentHeight + itemHeight);
+  //   // Dinamik alan hesaplama
+  //   dynamicSize = (currentWidth + itemWidth) * (currentHeight + itemHeight);
 
-    // Dinamik boyut güncellemesi
-    item.size = dynamicSize; // Öğenin boyutunu güncelle
-    const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
-    priceDisplay = `${formattedBasePrice}₺/m²`;
-  } else {
-    const formattedPrice = (item.price / 1).toLocaleString("tr-TR");
-    priceDisplay = `${formattedPrice}₺`;
-  }
+  //   // Dinamik boyut güncellemesi
+  //   item.size = dynamicSize; // Öğenin boyutunu güncelle
+  //   const formattedBasePrice = (item.price / 1).toLocaleString("tr-TR");
+  //   priceDisplay = `${formattedBasePrice}₺/m²`;
+  // } else {
+  //   const formattedPrice = (item.price / 1).toLocaleString("tr-TR");
+  //   priceDisplay = `${formattedPrice}₺`;
+  // }
 
   switch (category.priceFormat) {
-    case "metrekare":
-      itemHTML = `
-        <div class="focus-item" id="${categoryName}Div" data-tag="${
-        item.tag || ""
-      }">
-          <div class="ero__ort">
-            <div class="title__ort">
-              <h2 class="sizes__title">${item.name}</h2>
-            </div>
-            <div  class="itemImg" style="background: url(${
-              item.images[0]
-            }); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
-          </div>
-          <details>
-            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
-            <p>${item.description}</p>
-          </details>
-          <hr>
-          <div class="sizes__desc">
-            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${(
-              item.price / 1
-            ).toLocaleString("tr-TR")}m²</span></i>
-            <p class="sizes__paragh">Fiyat: 0tl</p>
-          </div>
-          <button data-category="${categoryName}" data-img="${
-        item.imageUrl
-      }" data-index="${index}" data-price="${item.price}" data-width="${
-        item.width || 0
-      }" data-height="${item.height || 0}" data-tag="${
-        item.tag
-      }"  class="button-6 proButs">Seç</button>
-        </div>`;
-      break;
+    case "metrekare": // Öğenin boyutunu güncelle
+    itemHTML = `
+    <div class="focus-item" id="${categoryName}Div" data-tag="${
+    item.tag || ""
+  }">
+      <div class="ero__ort">
+        <div class="title__ort">
+          <h2 class="sizes__title">${item.name}</h2>
+        </div>
+        <div class="details-btn" data-item='${JSON.stringify(
+          item
+        )}'style="background: url(${item.images[0]}); 
+        height:30vh; background-size:contain; background-repeat:no-repeat; background-position:center; cursor:pointer; text-align:center; "></div>
+      </div>
+      <div id="details">
+      
+       <button class="details-btn" data-item='${JSON.stringify(
+         item
+       )}' id="details-btn"  >Daha Fazla Bilgi</button>
+       </div>
+       
 
+      <hr>
+     <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
+        <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${
+          item.size
+        }m²</span></i></div>
+        <p class="sizes__paragh">Fiyat:<br>${(
+          item.price / 1
+        ).toLocaleString("tr-TR")}₺</p>
+      </div>
+      <button data-category="${categoryName}" data-img="${
+    item.images[0]
+  }" data-index="${index}" data-price="${item.price}" data-width="${
+    item.width || 0
+  }" data-height="${item.height || 0}" data-tag="${item.tag}" data-alan="${
+    item.size
+  }" class="button-6 proButs">Seç</button>
+    </div>`;
+    break
     case "artis":
       const currentWidth = parseFloat(mainCategoryTotals.width) || 0;
       const currentHeight = parseFloat(mainCategoryTotals.height) || 0;
       const itemWidth = parseFloat(item.width) || 0;
       const itemHeight = parseFloat(item.height) || 0;
-
       const newWidth = currentWidth + itemWidth;
       const newHeight = currentHeight + itemHeight;
       item.size = newWidth * newHeight; // Öğenin boyutunu güncelle
-
       itemHTML = `
         <div class="focus-item" id="${categoryName}Div" data-tag="${
         item.tag || ""
@@ -293,42 +294,46 @@ function createItemHtml(categoryName, item, index) {
       }" class="button-6 proButs">Seç</button>
         </div>`;
       break;
-
     case "cevre":
       itemHTML = `
-        <div class="focus-item" id="${categoryName}Div" data-tag="${
-        item.tag || ""
-      }">
-          <div class="ero__ort">
-            <div class="title__ort">
-              <h2 class="sizes__title">${item.name}</h2>
-            </div>
-           <div  class="itemImg" style="background: url(${
-             item.images[0]
-           })background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
-          <details>
-            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
-            <p>${item.description}</p>
-          </details>
-          <hr>
-          <div class="sizes__desc">
-            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${
-              item.size
-            }m²</span></i>
-            <p class="sizes__paragh">Fiyat: ${(item.price / 1).toLocaleString(
-              "tr-TR"
-            )}₺/m</p>
+      <div class="focus-item" id="${categoryName}Div" data-tag="${
+      item.tag || ""
+    }">
+        <div class="ero__ort">
+          <div class="title__ort">
+            <h2 class="sizes__title">${item.name}</h2>
           </div>
-          <button data-category="${categoryName}" data-img="${
-        item.imageUrl
-      }" data-index ="${index}" data-price="${item.price}" data-width="${
-        item.width || 0
-      }" data-height="${item.height || 0}" data-tag="${
-        item.tag
-      }" class="button-6 proButs">Seç</button>
-        </div>`;
-      break;
+          <div class="details-btn" data-item='${JSON.stringify(
+            item
+          )}'style="background: url(${item.images[0]}); 
+          height:30vh; background-size:contain; background-repeat:no-repeat; background-position:center; cursor:pointer; text-align:center; "></div>
+        </div>
+        <div id="details">
+        
+         <button class="details-btn" data-item='${JSON.stringify(
+           item
+         )}' id="details-btn"  >Daha Fazla Bilgi</button>
+         </div>
+         
 
+        <hr>
+       <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
+          <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${
+            item.size
+          }m²</span></i></div>
+          <p class="sizes__paragh">Fiyat:<br>${(
+            item.price / 1
+          ).toLocaleString("tr-TR")}₺</p>
+        </div>
+        <button data-category="${categoryName}" data-img="${
+      item.images[0]
+    }" data-index="${index}" data-price="${item.price}" data-width="${
+      item.width || 0
+    }" data-height="${item.height || 0}" data-tag="${item.tag}" data-alan="${
+      item.size
+    }" class="button-6 proButs">Seç</button>
+      </div>`;
+      break;
     case "tekil":
       itemHTML = `
         <div class="focus-item" id="${categoryName}Div" data-tag="${
@@ -353,23 +358,23 @@ function createItemHtml(categoryName, item, index) {
 
           <hr>
          <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
-            <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${item.size}m²</span></i></div>
-            <p class="sizes__paragh">Fiyat:<br>${(item.price/1).toLocaleString(
-              "tr-TR"
-            )}₺</p>
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${
+              item.size
+            }m²</span></i></div>
+            <p class="sizes__paragh">Fiyat:<br>${(
+              item.price / 1
+            ).toLocaleString("tr-TR")}₺</p>
           </div>
           <button data-category="${categoryName}" data-img="${
         item.images[0]
       }" data-index="${index}" data-price="${item.price}" data-width="${
         item.width || 0
-      }" data-height="${item.height || 0}" data-tag="${
-        item.tag
-      }" data-alan="${item.size}" class="button-6 proButs">Seç</button>
+      }" data-height="${item.height || 0}" data-tag="${item.tag}" data-alan="${
+        item.size
+      }" class="button-6 proButs">Seç</button>
         </div>`;
 
       break;
-      
-      
     case "tasDuvar":
       itemHTML = `
         <div class="focus-item" id="${categoryName}Div" data-tag="${
@@ -404,7 +409,7 @@ function createItemHtml(categoryName, item, index) {
       }" class="button-6 proButs">Seç</button>
         </div>`;
       break;
-      case "konti":
+    case "konti":
       itemHTML = `
         <div class="focus-item" id="${categoryName}Div" data-tag="${
         item.tag || ""
@@ -422,65 +427,157 @@ function createItemHtml(categoryName, item, index) {
           
            <button class="details-btn" data-item='${JSON.stringify(
              item
-           )}' id="details-btn"  >Daha Fazla Bilgi</button>
+           )}' id="details-btn" >Ayrıntılı Bilgi</button>
            </div>
            
 
           <hr>
          <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
-            <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${item.size}m²</span></i></div>
-            <p class="sizes__paragh">Fiyat:<br>${(item.price/1).toLocaleString(
-              "tr-TR"
-            )}₺</p>
+            <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${
+              item.size
+            }m²</span></i></div>
+            <p class="sizes__paragh">Fiyat:<br><span style="color:green;">${(
+              item.price / 1
+            ).toLocaleString("tr-TR")}₺</span></p>
           </div>
           <button data-category="${categoryName}" data-img="${
         item.images[0]
       }" data-index="${index}" data-price="${item.price}" data-width="${
         item.width || 0
-      }" data-height="${item.height || 0}" data-tag="${
-        item.tag
-      }" data-alan="${item.size}" class="button-6 proButs">Seç</button>
+      }" data-height="${item.height || 0}" data-tag="${item.tag}" data-alan="${
+        item.size
+      }" class="button-6 proButs">Seç</button>
         </div>`;
+      
+      break;
+    case "veranda":
+      itemHTML = `
+          <div class="focus-item" id="${categoryName}Div" data-tag="${
+        item.tag || ""
+      }">
+            <div class="ero__ort">
+              <div class="title__ort">
+                <h2 class="sizes__title">${item.name}</h2>
+              </div>
+              <div class="details-btn" data-item='${JSON.stringify(
+                item
+              )}'style="background: url(${item.images[0]}); 
+              height:30vh; background-size:contain; background-repeat:no-repeat; background-position:center; cursor:pointer; text-align:center; "></div>
+            </div>
+            <div id="details">
+            
+             <button class="details-btn" data-item='${JSON.stringify(
+               item
+             )}' id="details-btn" >Ayrıntılı Bilgi</button>
+             </div>
+             
+  
+            <hr>
+           <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
+              <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${
+                item.size
+              }m²</span></i></div>
+              <p class="sizes__paragh">Fiyat:<br>${(
+                item.price / 1
+              ).toLocaleString("tr-TR")}₺</p>
+            </div>
+            <button data-category="${categoryName}" data-img="${
+        item.images[0]
+      }" data-index="${index}" data-price="${item.price}" data-width="${
+        item.width || 0
+      }" data-height="${item.height || 0}" data-tag="${item.tag}" data-alan="${
+        item.size
+      }" class="button-6 proButs">Seç</button>
+          </div>`;
+
+      break;
+    case "onYuzey":
+      itemHTML = `
+            <div class="focus-item" id="${categoryName}Div" data-tag="${
+        item.tag || ""
+      }">
+              <div class="ero__ort">
+                <div class="title__ort">
+                  <h2 class="sizes__title">${item.name}</h2>
+                </div>
+                <div class="details-btn" data-item='${JSON.stringify(
+                  item
+                )}'style="background: url(${item.images[0]}); 
+                height:30vh; background-size:contain; background-repeat:no-repeat; background-position:center; cursor:pointer; text-align:center; "></div>
+              </div>
+              <div id="details">
+              
+               <button class="details-btn" data-item='${JSON.stringify(
+                 item
+               )}' id="details-btn"  >Daha Fazla Bilgi</button>
+               </div>
+               
+    
+              <hr>
+             <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
+                <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${
+                  item.size
+                }m²</span></i></div>
+                <p class="sizes__paragh">Fiyat:<br>${(
+                  item.price / 1
+                ).toLocaleString("tr-TR")}₺</p>
+              </div>
+              <button data-category="${categoryName}" data-img="${
+        item.images[0]
+      }" data-index="${index}" data-price="${item.price}" data-width="${
+        item.width || 0
+      }" data-height="${item.height || 0}" data-tag="${item.tag}" data-alan="${
+        item.size
+      }" class="button-6 proButs">Seç</button>
+            </div>`;
 
       break;
     default:
       itemHTML = `
-        <div class="focus-item" id="${categoryName}Div" data-tag="${
-        item.tag || ""
-      }">
-          <div class="ero__ort">
-            <div class="title__ort">
-              <h2 class="sizes__title">${item.name}</h2>
-            </div>
-            <div  class="itemImg" style="background: url(${
-              item.images[0]
-            }); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>
-          <details>
-            <summary style="margin: 0 auto; cursor:pointer; display: flex; justify-content: center; font-weight:bold;">Daha Fazla Bilgi</summary>
-            <p>${item.description}</p>
-          </details>
-          <hr>
-          <div class="sizes__desc">
-            <i class="fa-solid fa-ruler-combined"><span class="sizes__size">${
-              item.size
-            }m²</span></i>
-            <p class="sizes__paragh">Fiyat: ${(item.price / 1).toLocaleString(
-              "tr-TR"
-            )}₺</p>
+      <div class="focus-item" id="${categoryName}Div" data-tag="${
+      item.tag || ""
+    }">
+        <div class="ero__ort">
+          <div class="title__ort">
+            <h2 class="sizes__title">${item.name}</h2>
           </div>
-          <button data-category="${categoryName}" data-img="${
-        item.imageUrl
-      }" data-index="${index}" data-price="${item.price}" data-width="${
-        item.width || 0
-      }" data-height="${item.height || 0}" data-tag="${
-        item.tag
-      }" class="button-6 proButs">Seç</button>
-        </div>`;
-      break;
+          <div class="details-btn" data-item='${JSON.stringify(
+            item
+          )}'style="background: url(${item.images[0]}); 
+          height:30vh; background-size:contain; background-repeat:no-repeat; background-position:center; cursor:pointer; text-align:center; "></div>
+        </div>
+        <div id="details">
+        
+         <button class="details-btn" data-item='${JSON.stringify(
+           item
+         )}' id="details-btn"  >Daha Fazla Bilgi</button>
+         </div>
+         
+
+        <hr>
+       <div class="sizes__desc"><div class="alanText" style="font-weight:bold;">Alan: <br>
+          <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${
+            item.size
+          }m²</span></i></div>
+          <p class="sizes__paragh">Fiyat:<br>${(
+            item.price / 1
+          ).toLocaleString("tr-TR")}₺</p>
+        </div>
+        <button data-category="${categoryName}" data-img="${
+      item.images[0]
+    }" data-index="${index}" data-price="${item.price}" data-width="${
+      item.width || 0
+    }" data-height="${item.height || 0}" data-tag="${item.tag}" data-alan="${
+      item.size
+    }" class="button-6 proButs">Seç</button>
+      </div>`;
+      break
   }
 
   return itemHTML;
 }
+
+// Veranda öğelerini filtreleyen fonksiyon
 
 //ARTIS GÖSTERİMİ İÇİN
 function updateItemSizesOnSelection() {
@@ -671,7 +768,7 @@ function updateItemSizesOnSelection() {
           item.querySelector(
             ".sizes__paragh"
           ).innerHTML = `Fark:<br><span style="color:green;">+0₺</span>`;
-        } 
+        }
       });
 
       // Diğer itemları seçilen itemın farkı ile güncelle
@@ -693,90 +790,306 @@ function updateItemSizesOnSelection() {
           } else {
             const fark = alan * alanPrice + cevre * price;
             item.querySelector(".sizes__size").textContent = `${alan}m²`;
-            if(selectedItemFark > 0){
-            item.querySelector(
-              ".sizes__paragh"
-            ).innerHTML = `Fark:<br><span style="color:red;">-${selectedItemFark.toLocaleString(
-              "tr-TR"
-            )}₺</span>`;}
-            else{
-            item.querySelector(
-              ".sizes__paragh"
-            ).innerHTML = `Fark:<br><span style="color:green;">+${selectedItemFark.toLocaleString(
-              "tr-TR"
-            )}₺</span>`;
+            if (selectedItemFark > 0) {
+              item.querySelector(
+                ".sizes__paragh"
+              ).innerHTML = `Fark:<br><span style="color:red;">-${selectedItemFark.toLocaleString(
+                "tr-TR"
+              )}₺</span>`;
+            } else {
+              item.querySelector(
+                ".sizes__paragh"
+              ).innerHTML = `Fark:<br><span style="color:green;">+${selectedItemFark.toLocaleString(
+                "tr-TR"
+              )}₺</span>`;
             }
           }
         }
       });
-    }else if(category.priceFormat === "tekil"){
+    } else if (category.priceFormat === "tekil") {
+      if (category.select === "singleSelect") {
+        const items = document.querySelectorAll(`#${categoryName} .focus-item`);
+        let selectedItemPrice = 0;
+        let selectedItem = null;
 
+        // Seçilen öğeyi bul ve fiyatını al
+        items.forEach((item) => {
+          const itemButton = item.querySelector(".proButs");
+          const isSelected = itemButton.classList.contains("selected");
 
-      
+          if (isSelected) {
+            selectedItemPrice =
+              parseFloat(itemButton.getAttribute("data-price")) || 0;
+            selectedItem = item; // Seçilen öğeyi sakla
+          }
+        });
+
+        // Diğer öğelerin fiyatlarını güncelle ve farkları hesapla
+        items.forEach((item) => {
+          const itemButton = item.querySelector(".proButs");
+          const itemPrice =
+            parseFloat(itemButton.getAttribute("data-price")) || 0;
+          const itemWidth =
+            parseFloat(itemButton.getAttribute("data-width")) || 0;
+          const itemHeight =
+            parseFloat(itemButton.getAttribute("data-height")) || 0;
+          const itemSize =
+            parseFloat(itemButton.getAttribute("data-size")) || 0;
+
+          const priceDifference = itemPrice - selectedItemPrice;
+
+          // Fiyatı göster
+          const priceDisplay = item.querySelector(".sizes__paragh");
+          const sizeDisplay = item.querySelector(".sizes__size");
+          const alanText = item.querySelector(".alanText");
+          if (priceDisplay) {
+            if (!selectedItem) {
+              // Eğer hiçbir öğe seçili değilse ve fiyat 0 ise "Standart" göster
+              if (itemPrice === 0) {
+                priceDisplay.innerHTML = `Fiyat:<br>Standart`;
+              } else {
+                priceDisplay.innerHTML = `Fiyat:<br><span style="color:green;">+${itemPrice.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              }
+            } else {
+              // Seçilen öğe varsa, farkları göster
+              if (priceDifference > 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>+${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else if (priceDifference < 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:red;"><br>${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>0₺</span>`;
+              }
+            }
+          }
+          if (itemSize === 0 || itemSize === null) {
+            if (itemWidth !== 0 && itemHeight !== 0) {
+              alanText.innerHTML = `Ebatlar: <br> <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${itemWidth}x${itemHeight}</span></i>`;
+              alanText.style.display = "block"; // AlanText'i göster
+            } else {
+              alanText.style.display = "none"; // AlanText'i gizle
+              item.querySelector(".sizes__desc").style =
+                "display:flex; flex-direction:row; justify-content:flex-start;";
+            }
+          } else {
+            sizeDisplay.innerHTML = `${itemSize}`;
+            alanText.style.display = "block"; // AlanText'i göster
+          }
+        });
+      }
+    }else if(category.priceFormat === "cevre"){
       const items = document.querySelectorAll(`#${categoryName} .focus-item`);
       let selectedItemPrice = 0;
       let selectedItem = null;
-
-      // Seçilen öğeyi bul ve fiyatını al
       items.forEach((item) => {
         const itemButton = item.querySelector(".proButs");
         const isSelected = itemButton.classList.contains("selected");
 
         if (isSelected) {
-          selectedItemPrice = parseFloat(itemButton.getAttribute("data-price")) || 0;
+          selectedItemPrice =
+          (parseFloat(itemButton.getAttribute("data-price")) || 0) * ((kontiHeight + kontiWidth) *2);
           selectedItem = item; // Seçilen öğeyi sakla
         }
+        
       });
-
-      // Diğer öğelerin fiyatlarını güncelle ve farkları hesapla
       items.forEach((item) => {
         const itemButton = item.querySelector(".proButs");
-        const itemPrice = parseFloat(itemButton.getAttribute("data-price")) || 0;
-        const itemWidth = parseFloat(itemButton.getAttribute("data-width")) || 0;
-    const itemHeight = parseFloat(itemButton.getAttribute("data-height")) || 0;
-    const itemSize = parseFloat(itemButton.getAttribute("data-size")) || 0;
+        const itemPrice =
+          (parseFloat(itemButton.getAttribute("data-price")) || 0) * ((kontiHeight + kontiWidth) *2);
+        const itemWidth =
+          parseFloat(itemButton.getAttribute("data-width")) || 0;
+        const itemHeight =
+          parseFloat(itemButton.getAttribute("data-height")) || 0;
+        const itemSize =
+          parseFloat(itemButton.getAttribute("data-size")) || 0;
 
-        const priceDifference = itemPrice - selectedItemPrice;
-
-        // Fiyatı göster
+        const priceDifference = itemPrice - selectedItemPrice; 
         const priceDisplay = item.querySelector(".sizes__paragh");
-        const sizeDisplay = item.querySelector(".sizes__size");
-        const alanText = item.querySelector(".alanText");
-        if (priceDisplay) {
-          if (!selectedItem) {
-            // Eğer hiçbir öğe seçili değilse ve fiyat 0 ise "Standart" göster
-            if (itemPrice === 0) {
-              priceDisplay.innerHTML = `Fiyat:<br>Standart`;
+          const sizeDisplay = item.querySelector(".sizes__size");
+          const alanText = item.querySelector(".alanText");
+          if (priceDisplay) {
+            if (!selectedItem) {
+              // Eğer hiçbir öğe seçili değilse ve fiyat 0 ise "Standart" göster
+              if (itemPrice === 0) {
+                priceDisplay.innerHTML = `Fiyat:<br>Standart`;
+              } else {
+                priceDisplay.innerHTML = `Fiyat:<br><span style="color:green;">+${itemPrice.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              }
             } else {
-              priceDisplay.innerHTML = `Fiyat:<br><span style="color:green;">+${itemPrice.toLocaleString("tr-TR")}₺</span>`;
-            }
-          } else {
-            // Seçilen öğe varsa, farkları göster
-            if (priceDifference > 0) {
-              priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>+${priceDifference.toLocaleString("tr-TR")}₺</span>`;
-            } else if (priceDifference < 0) {
-              priceDisplay.innerHTML = `Fark: <span style="color:red;"><br>${priceDifference.toLocaleString("tr-TR")}₺</span>`;
-            } else {
-              priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>0₺</span>`;
+              // Seçilen öğe varsa, farkları göster
+              if (priceDifference > 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>+${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else if (priceDifference < 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:red;"><br>${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>0₺</span>`;
+              }
             }
           }
-        }
-        if (itemSize === 0 || itemSize === null) {
-          if (itemWidth !== 0 && itemHeight !== 0) {
-            alanText.innerHTML = `Ebatlar: <br> <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${itemWidth}x${itemHeight}</span></i>`;
+          if (itemSize === 0 || itemSize === null) {
+            if (itemWidth !== 0 && itemHeight !== 0) {
+              alanText.innerHTML = `Ebatlar: <br> <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${itemWidth}x${itemHeight}</span></i>`;
+              alanText.style.display = "block"; // AlanText'i göster
+            } else {
+              alanText.style.display = "none"; // AlanText'i gizle
+              item.querySelector(".sizes__desc").style =
+                "display:flex; flex-direction:row; justify-content:flex-start;";
+            }
+          } else {
+            sizeDisplay.innerHTML = `${itemSize}`;
             alanText.style.display = "block"; // AlanText'i göster
-          } else {
-            alanText.style.display = "none"; // AlanText'i gizle
-            item.querySelector(".sizes__desc").style = "display:flex; flex-direction:row; justify-content:flex-start;"; 
           }
-        } else {
-          sizeDisplay.innerHTML = `${itemSize}`;
-          alanText.style.display = "block"; // AlanText'i göster
-         
+      })
+      
+    }else if(category.priceFormat === "metrekare"){
+      const items = document.querySelectorAll(`#${categoryName} .focus-item`);
+      let selectedItemPrice = 0;
+      let selectedItem = null;
+      items.forEach((item) => {
+        const itemButton = item.querySelector(".proButs");
+        const isSelected = itemButton.classList.contains("selected");
+
+        if (isSelected) {
+          selectedItemPrice =
+          (parseFloat(itemButton.getAttribute("data-price")) || 0) * (kontiHeight * kontiWidth);
+          selectedItem = item; // Seçilen öğeyi sakla
         }
-        
         
       });
+      items.forEach((item) => {
+        const itemButton = item.querySelector(".proButs");
+        const itemPrice =
+          (parseFloat(itemButton.getAttribute("data-price")) || 0) * (kontiHeight * kontiWidth);
+        const itemWidth =
+          parseFloat(itemButton.getAttribute("data-width")) || 0;
+        const itemHeight =
+          parseFloat(itemButton.getAttribute("data-height")) || 0;
+        const itemSize =
+          parseFloat(itemButton.getAttribute("data-size")) || 0;
+
+        const priceDifference = itemPrice - selectedItemPrice; 
+        const priceDisplay = item.querySelector(".sizes__paragh");
+          const sizeDisplay = item.querySelector(".sizes__size");
+          const alanText = item.querySelector(".alanText");
+          if (priceDisplay) {
+            if (!selectedItem) {
+              // Eğer hiçbir öğe seçili değilse ve fiyat 0 ise "Standart" göster
+              if (itemPrice === 0) {
+                priceDisplay.innerHTML = `Fiyat:<br>Standart`;
+              } else {
+                priceDisplay.innerHTML = `Fiyat:<br><span style="color:green;">+${itemPrice.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              }
+            } else {
+              // Seçilen öğe varsa, farkları göster
+              if (priceDifference > 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>+${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else if (priceDifference < 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:red;"><br>${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>0₺</span>`;
+              }
+            }
+          }
+          if (itemSize === 0 || itemSize === null) {
+            if (itemWidth !== 0 && itemHeight !== 0) {
+              alanText.innerHTML = `Ebatlar: <br> <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${itemWidth}x${itemHeight}</span></i>`;
+              alanText.style.display = "block"; // AlanText'i göster
+            } else {
+              alanText.style.display = "none"; // AlanText'i gizle
+              item.querySelector(".sizes__desc").style =
+                "display:flex; flex-direction:row; justify-content:flex-start;";
+            }
+          } else {
+            sizeDisplay.innerHTML = `${itemSize}`;
+            alanText.style.display = "block"; // AlanText'i göster
+          }
+      })
+    }else if(category.priceFormat === "onYuzey"){
+      const items = document.querySelectorAll(`#${categoryName} .focus-item`);
+      let selectedItemPrice = 0;
+      let selectedItem = null;
+      items.forEach((item) => {
+        const itemButton = item.querySelector(".proButs");
+        const isSelected = itemButton.classList.contains("selected");
+
+        if (isSelected) {
+          selectedItemPrice =
+          (parseFloat(itemButton.getAttribute("data-price")) || 0) * kontiHeight;
+          selectedItem = item; // Seçilen öğeyi sakla
+        }
+        
+      });
+      items.forEach((item) => {
+        const itemButton = item.querySelector(".proButs");
+        const itemPrice =
+          (parseFloat(itemButton.getAttribute("data-price")) || 0) * kontiHeight ;
+        const itemWidth =
+          parseFloat(itemButton.getAttribute("data-width")) || 0;
+        const itemHeight =
+          parseFloat(itemButton.getAttribute("data-height")) || 0;
+        const itemSize =
+          parseFloat(itemButton.getAttribute("data-size")) || 0;
+
+        const priceDifference = itemPrice - selectedItemPrice; 
+        const priceDisplay = item.querySelector(".sizes__paragh");
+          const sizeDisplay = item.querySelector(".sizes__size");
+          const alanText = item.querySelector(".alanText");
+          if (priceDisplay) {
+            if (!selectedItem) {
+              // Eğer hiçbir öğe seçili değilse ve fiyat 0 ise "Standart" göster
+              if (itemPrice === 0) {
+                priceDisplay.innerHTML = `Fiyat:<br>Standart`;
+              } else {
+                priceDisplay.innerHTML = `Fiyat:<br><span style="color:green;">+${itemPrice.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              }
+            } else {
+              // Seçilen öğe varsa, farkları göster
+              if (priceDifference > 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>+${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else if (priceDifference < 0) {
+                priceDisplay.innerHTML = `Fark: <span style="color:red;"><br>${priceDifference.toLocaleString(
+                  "tr-TR"
+                )}₺</span>`;
+              } else {
+                priceDisplay.innerHTML = `Fark: <span style="color:green;"><br>0₺</span>`;
+              }
+            }
+          }
+          if (itemSize === 0 || itemSize === null) {
+            if (itemWidth !== 0 && itemHeight !== 0) {
+              alanText.innerHTML = `Ebatlar: <br> <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${itemWidth}x${itemHeight}</span></i>`;
+              alanText.style.display = "block"; // AlanText'i göster
+            } else {
+              alanText.style.display = "none"; // AlanText'i gizle
+              item.querySelector(".sizes__desc").style =
+                "display:flex; flex-direction:row; justify-content:flex-start;";
+            }
+          } else {
+            sizeDisplay.innerHTML = `${itemSize}`;
+            alanText.style.display = "block"; // AlanText'i göster
+          }
+      })
     }
   });
 }
@@ -787,10 +1100,10 @@ function addEventListeners(categoriesData) {
     button.addEventListener("click", () => {
       const itemName = button.getAttribute("data-name");
       const categoryName = button.getAttribute("data-category");
-      logEvent(analytics, 'select_item', {
+      logEvent(analytics, "select_item", {
         item_name: itemName,
         category: categoryName,
-    });
+      });
 
       handleItemClick(button, categoriesData);
       updateItemSizesOnSelection();
@@ -818,6 +1131,7 @@ function handleItemClick(button, categoriesData) {
 
     if (button.classList.contains("selected")) {
       deselectItem(button, categoryName, mainCategory);
+      button.textContent = "Seç";
       hideSubcategoriesRecursively(categoryName, categoriesData);
     } else {
       // Eğer kategori multiSelect ise, sadece seçimi yap
@@ -828,10 +1142,12 @@ function handleItemClick(button, categoriesData) {
         const currentSelected = selectedItemsPerCategory[categoryName];
         if (currentSelected) {
           deselectItem(currentSelected, categoryName, mainCategory);
+
           hideSubcategoriesRecursively(categoryName, categoriesData);
         }
         selectItem(button, categoryName, mainCategory);
       }
+      button.textContent = "Seçildi";
       renderSubcategoriesRecursively(categoryName, categoriesData);
     }
 
@@ -911,14 +1227,14 @@ function updateAllPrices(mainCategory) {
       case "tekil":
         calculatedPrice = item.basePrice; // Sadece basePrice kullanılır
         break;
-        case "konti":
+      case "konti":
         calculatedPrice = item.basePrice; // Sadece basePrice kullanılır
         break;
       case "metrekare":
-        calculatedPrice = item.basePrice * totalArea;
+        calculatedPrice = item.basePrice * (kontiHeight * kontiWidth);
         break;
       case "cevre":
-        calculatedPrice = item.basePrice * currentPerimeter;
+        calculatedPrice = item.basePrice * ((kontiHeight + kontiWidth) * 2);
         break;
       case "artis":
         const newWidth = currentWidth + (item.width || 0);
@@ -953,6 +1269,12 @@ function updateAllPrices(mainCategory) {
         console.log(
           `Mevcut Genişlik: ${currentWidth}, Mevcut Yükseklik: ${currentHeight}, Çevre = ${cevre} , Alan = ${alanFiyat} Hesaplanan Fiyat = ${calculatedPrice}`
         );
+      case "veranda":
+        calculatedPrice = item.basePrice;
+        break;
+      case "onYuzey":
+        calculatedPrice = item.basePrice * kontiHeight;
+        break;
       default:
         // calculatedPrice = item.basePrice; // Diğer durumlarda basePrice kullanılır
         break;
@@ -1014,10 +1336,10 @@ function calculatePrice(item, category, mainCategory) {
     case "tekil":
       calculatePrice = item.price; // Tekil fiyat görünmeyecek
     case "metrekare":
-      calculatedPrice = item.price * (width * height);
+      calculatedPrice = item.price * (kontiHeight * kontiWidth);
       break;
     case "cevre":
-      calculatedPrice = item.price * ((width + height) * 2);
+      calculatedPrice = item.price * ((kontiHeight + kontiWidth) * 2);
       break;
     case "artis":
       calculatedPrice = item.price * item.area;
@@ -1035,6 +1357,10 @@ function calculatePrice(item, category, mainCategory) {
         //   break;
         // }
       }
+    case "onYuzey":
+      calculatedPrice = item.price * kontiHeight;
+
+      break;
 
     default:
       return 0; // Diğer durumlarda 0 döndür
@@ -1092,7 +1418,12 @@ function selectItem(button, categoryName, mainCategory) {
       console.log(item);
       selectedCategories.push(item);
     }
-    console.log(selectedCategories);
+
+    kontiHeight = categoryTotals["konti"]
+      ? categoryTotals["konti"].height
+      : null;
+    kontiWidth = categoryTotals["konti"] ? categoryTotals["konti"].width : null;
+
     selectedItemsPerCategory[categoryName] = button;
     updateAllPrices(mainCategory);
     updateSelectedProductsDisplay();
@@ -1185,13 +1516,22 @@ function filterCategoryItemsByTags(categoryName, categoriesData) {
       .getAttribute("data-tag")
       .split(",")
       .map((t) => t.trim());
-    // Seçilen etiketler ile ürün etiketleri arasında bir eşleşme kontrolü
-    const hasMatchingTag =
-      selectedTags.length === 0 ||
-      itemTags.some((tag) => selectedTags.includes(tag));
+    const category = categoriesData[categoryName];
+    if (category.priceFormat === "veranda") {
+      if (itemTags.includes(kontiHeight.toString())) {
+        item.style.display = "block";
+      } else {
+        item.style.display = "none";
+      }
+    } else {
+      // Seçilen etiketler ile ürün etiketleri arasında bir eşleşme kontrolü
+      const hasMatchingTag =
+        selectedTags.length === 0 ||
+        itemTags.some((tag) => selectedTags.includes(tag));
 
-    // Eğer eşleşme varsa, ürünü görünür yap
-    item.style.display = hasMatchingTag ? "grid" : "none";
+      // Eğer eşleşme varsa, ürünü görünür yap
+      item.style.display = hasMatchingTag ? "grid" : "none";
+    }
   });
 }
 function filterSidebarItemsByTags() {
@@ -1271,7 +1611,6 @@ function toggleItemSelection(button, parentDiv, isSelected) {
   button.classList.toggle("selected", isSelected);
   parentDiv.classList.toggle("selected", isSelected);
 }
-
 // Remove selected price
 function removeSelectedPrice(price) {
   const index = selectedPrices.indexOf(price);
@@ -1323,12 +1662,6 @@ function logCategoryTotals() {
     })),
   });
 }
-
-// Apply tags to next categories
-
-// Filter items based on selected tags
-
-// Check and deselect invalid items
 
 function updateSubcategoryPrices(parentCategoryName) {
   const mainCategory = getMainCategory(parentCategoryName, categoriesData);
@@ -1427,8 +1760,8 @@ function updateSelectedProductsDisplay() {
       rightSide.appendChild(detailsDiv);
       detailsDiv.classList.add("sonuc__details");
     });
-    rightSide.style = "display: none;"
-    leftSide.style = "display: none;"
+    rightSide.style = "display: none;";
+    leftSide.style = "display: none;";
   });
 
   sonucContainer.appendChild(rightSide); // Sağ bölümü sonuç konteynerine ekle

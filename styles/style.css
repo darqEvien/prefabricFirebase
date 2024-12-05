@@ -6,6 +6,7 @@ body {
   margin: 0;
   padding: 0;
   background-color: #f3f3f3;
+  overflow: hidden;
 }
 
 /* Header styles */
@@ -30,6 +31,9 @@ html, body {
   background-color: white;
   padding: 20px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  position: relative;
+  
 }
 
 .sidebar img {
@@ -130,11 +134,30 @@ html, body {
   border: 2px solid gold;
 }
 
+
+
 .stickytry{
   position: fixed;
-  width: 17%;
+  width: 314px;
+  height: calc(7*62px); /* Yüksekliği tam sayfa yüksekliği yap */
+  overflow-y: auto; /* Dikey kaydırma çubuğu ekle */
 }
-
+.total__sticky{
+    min-width: 317px;
+    top: calc(7*70px);
+    display: flex;
+    position: fixed;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+}
+::-webkit-scrollbar {
+  display: none;
+  visibility: hidden;
+  opacity: 0
+}
 /* Main content styles */
 .main-content {
   width: 75%;
@@ -178,12 +201,23 @@ html, body {
   /* height: auto; */
   /* height: 21.5rem; */
 }
+.focus-item .proButs.selected {
+  background-color: #FFC94A;
+  color: white;
+  border-color: #C08B5C;
+}
+
+.focus-item .proButs.selected:hover {
+  background-color: white;
+  color: #343131;
+  border-color: #343131;
+}
 .ero__ort{
   min-height: 200px;
   
 }
 .focus-item.selected {
-  border-color: gold;
+  border-color: #FFC94A;
 }
 
 .focus-item img {
@@ -222,10 +256,11 @@ margin: 0 auto 20px auto;
  
 }
 .proButs:hover {
-  background-color: gold;
+  background-color: #FFC94A;
   color: white;
-  border-color: white;
+  border-color: #C08B5C;
 }
+
 
 
 #total__section {
@@ -319,7 +354,7 @@ margin: 0 auto 20px auto;
   padding: 10px;
   border-radius: 5px;
 }
-.sonuc__details, .sonuc__details summary{
+.sonuc__details, .sonuc__details {
   font-weight: bold;
   cursor: pointer;
   display: flex;

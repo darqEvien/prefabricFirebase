@@ -41,6 +41,7 @@ async function getDocumentsInCategory(categoryName) {
       height: data.height, 
       images: data.images || [],
       accessibility: data.accessibility,
+      priceFormat: data.priceFormat,
       ...data,
     };
   });
@@ -66,13 +67,13 @@ async function createCategoryObjects() {
             ...doc,
             alanPrice: doc.alanPrice || 0,
             // Eğer priceFormat 'tekil' veya 'metrekare' ise ve width ve height varsa, alanı hesapla
-            area: (category.priceFormat === 'tekil' || category.priceFormat === 'metrekare') && doc.width && doc.height
-              ? doc.width * doc.height
-              : null,
-            // Eğer priceFormat 'cevre' ise ve width ve height varsa, çevreyi hesapla
-            perimeter: category.priceFormat === 'cevre' && doc.width && doc.height
-              ? 2 * (doc.width + doc.height)
-              : null,
+            // area: (category.priceFormat === 'tekil' || category.priceFormat === 'metrekare') && doc.width && doc.height
+            //   ? doc.width * doc.height
+            //   : null,
+            // // Eğer priceFormat 'cevre' ise ve width ve height varsa, çevreyi hesapla
+            // perimeter: category.priceFormat === 'cevre' && doc.width && doc.height
+            //   ? 2 * (doc.width + doc.height)
+            //   : null,
           })),
         };
       }
