@@ -25,7 +25,7 @@ async function getCategoriesTitles(categoryName) {
     );
     return categoriesTitles;
   } catch (error) {
-    console.error("Kategorilerden veriler alınırken hata oluştu:", error);
+    // console.error("Kategorilerden veriler alınırken hata oluştu:", error);
     return [];
   }
 }
@@ -80,9 +80,9 @@ async function createCategoryObjects() {
       
     }
 
-    console.log(categoriesData);
+    // console.log(categoriesData);
   } catch (error) {
-    console.error("Hata oluştu: ", error);
+    // console.error("Hata oluştu: ", error);
   }
   return categoriesData;
 }
