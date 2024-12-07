@@ -1115,6 +1115,34 @@ function handleItemClick(button, categoriesData) {
         deselectItem(currentSelected, categoryName, mainCategory);
       }
     }
+    // KÖYLÜ YÖNTEMİYLE SEÇİM KALDIRMA İŞİ
+    if (categoryName === "depo") {
+      ["bathroom", "banyo"].forEach((catName) => {
+          const selectedButton = selectedItemsPerCategory[catName];
+          if (selectedButton) {
+              deselectItem(selectedButton, catName, getMainCategory(catName, categoriesData));
+          }
+      });}
+    
+    if (categoryName === "bathroom" && selectedCategories.includes("small_size")) {
+      ["banyo"].forEach((catName) => {
+          const selectedButton = selectedItemsPerCategory[catName];
+          if (selectedButton) {
+              deselectItem(selectedButton, catName, getMainCategory(catName, categoriesData));
+          }
+      });}
+  
+    if (categoryName === "konti") {
+      Object.keys(selectedItemsPerCategory).forEach((catName) => {
+          if (catName !== categoryName) {
+              const selectedButton = selectedItemsPerCategory[catName];
+              if (selectedButton) {
+                  deselectItem(selectedButton, catName, getMainCategory(catName, categoriesData));
+              }
+          }
+      });
+  }
+
 
     if (button.classList.contains("selected")) {
       deselectItem(button, categoryName, mainCategory);
@@ -1153,7 +1181,6 @@ function handleItemClick(button, categoriesData) {
     updateTotalPrice();
     // logCategoryTotals();
     updateAllPrices(mainCategory);
-    // Seçilen ürünleri güncelle
     updateItemSizesOnSelection();
     updateSelectedProductsDisplay();
     filterCategoriesByTags();
@@ -1250,17 +1277,16 @@ function updateAllPrices(mainCategory) {
         // }
         break;
       case "tasDuvar":
-        const tasWidth = categoryTotals[mainCategory].width; // Bu değerlerin doğru alındığını kontrol edin
-        const tasHeight = categoryTotals[mainCategory].height;
+   
         const alanFiyat =
           parseFloat(item.button.getAttribute("data-alan-price")) || 0;
         const cevreFiyat =
           parseFloat(item.button.getAttribute("data-price")) || 0;
-        const cevre = (tasHeight + tasWidth) * 2;
-        const alan = tasHeight * tasWidth;
+        const cevre = (kontiHeight + kontiWidth) * 2;
+        const alan = kontiWidth* kontiHeight;
 
         // Yeni fiyat hesaplama yöntemi
-        calculatedPrice = alan * alanFiyat + cevre * cevreFiyat;
+        calculatedPrice = (alan * alanFiyat) + (cevre * cevreFiyat);
       
       case "veranda":
         calculatedPrice = item.basePrice;
@@ -1350,9 +1376,11 @@ function calculatePrice(item, category, mainCategory) {
         //   break;
         // }
       }
+      case "tasDuvar":
+        calculatedPrice = (((kontiHeight + kontiWidth)*2)*item.price)((kontiHeight * kontiWidth)* item.alanPrice)
+        break;
     case "onYuzey":
       calculatedPrice = item.price * kontiHeight;
-
       break;
 
     default:
@@ -1380,7 +1408,7 @@ function selectItem(button, categoryName, mainCategory) {
     categoryTotals[mainCategory].area =
       categoryTotals[mainCategory].width * categoryTotals[mainCategory].height;
     // Calculate price
-    let calculatedPrice = basePrice * categoryTotals[mainCategory].area; // Adjust based on your pricing logic
+    let calculatedPrice = basePrice / 1; // Adjust based on your pricing logic
 
     button.classList.add("selected");
     parentDiv.classList.add("selected");
@@ -1450,7 +1478,7 @@ function deselectItem(button, categoryName, mainCategory) {
 
     // Calculate price
 
-    let calculatedPrice = basePrice * categoryTotals[mainCategory].area; // Adjust based on your pricing logic
+    let calculatedPrice = basePrice / 1; // Adjust based on your pricing logic
 
     button.classList.remove("selected");
     button.closest(".focus-item").classList.remove("selected");
@@ -1468,7 +1496,7 @@ function deselectItem(button, categoryName, mainCategory) {
       }
     });
 
-
+    delete selectedItemsPerCategory[categoryName];
     // Update prices for subcategories
     updateAllPrices(mainCategory);
     updateItemSizesOnSelection();
