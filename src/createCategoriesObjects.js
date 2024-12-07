@@ -11,7 +11,7 @@ async function getCategories() {
     select: doc.data().select,
     parentCategory: doc.data().parentCategory,
     priceFormat: doc.data().priceFormat,
-    catTag: doc.data().tags,
+    catTag: doc.data().tags || [],
     accessibility: doc.data().accessibility !== undefined ? doc.data().accessibility : false,// Yeni eklenen alan
     ...doc.data(),
   }));

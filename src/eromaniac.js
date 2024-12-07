@@ -14,8 +14,8 @@ let dimensionsPerCategory = {};
 let categoryTotals = {};
 let currentWidth;
 let currentHeight;
-let kontiHeight;
-let kontiWidth;
+let kontiHeight = 0;
+let kontiWidth = 0;
 
 // Initialize categories
 async function initializeCategories() {
@@ -38,15 +38,17 @@ async function initializeCategories() {
       }
     });
 
-    // Initialize with the 'konti' tag
-    selectedCategories.push("genel");
+    // Initialize with the 'genelKonti' tag
+    
 
 
-
-    filterCategoriesByTags(); // Ensure this is called after rendering categories
+    selectedCategories.push("baslangic");
+    console.log(selectedCategories);
     renderCategories(categoriesData);
     addEventListeners(categoriesData);
     updateSelectedProductsDisplay();
+    filterCategoriesByTags();
+     // Ensure this is called after rendering categories
   } catch (error) {
     console.error("Error loading categories:", error);
   }
@@ -1077,6 +1079,19 @@ function updateItemSizesOnSelection() {
             alanText.style.display = "block"; // AlanText'i göster
           }
       })
+    }else if (category.priceFormat === "veranda") {
+      const items = document.querySelectorAll(`#${categoryName} .focus-item`);
+
+      items.forEach((item) => {
+        const itemButton = item.querySelector(".proButs");
+        const width = parseFloat(itemButton.getAttribute("data-width")) || 0;
+        const height = parseFloat(itemButton.getAttribute("data-height")) || 0;
+        const sizeDisplay = item.querySelector(".sizes__size");
+        const alanText = item.querySelector(".alanText");
+        const calculatedArea = width * height;
+        alanText.innerHTML = `Alan: <br> <i class="fa-solid fa-ruler-combined"><span class="sizes__size"> ${calculatedArea.toFixed(2)} m²</span></i>`;
+        // Eğer alanText 0 ise, width ve height çarpımını göster
+      });
     }
   });
 }
@@ -1507,53 +1522,58 @@ function deselectItem(button, categoryName, mainCategory) {
 function filterCategoriesByTags() {
   const hasSelectedTags = selectedCategories.length > 0;
 
-  // Her bir kategoriyi döngüye al ve seçilen etiketlere göre göster/gizle
   Object.entries(categoriesData).forEach(([categoryName, category]) => {
-    const categoryElement = document.getElementById(
-      `${categoryName}_container`
-    );
-    if (categoryElement) {
-      const categoryTags = category.catTag || [];
-      const matchesTags = categoryTags.some((tag) =>
-        selectedCategories.includes(tag)
-      );
-      categoryElement.style.display =
-        hasSelectedTags && !matchesTags ? "none" : "block";
-    }
-    filterCategoryItemsByTags(categoryName, categoriesData);
+      const categoryElement = document.getElementById(`${categoryName}_container`);
+      if (categoryElement) {
+          const categoryTags = category.catTag || [];
+          const matchesTags = categoryTags.some((tag) => selectedCategories.includes(tag));
+
+          // Eğer seçilen tag varsa ve eşleşme yoksa gizle
+          categoryElement.style.display = hasSelectedTags && !matchesTags ? "none" : "block";
+      }
+      filterCategoryItemsByTags(categoryName, categoriesData);
   });
   filterSidebarItemsByTags();
-}
+};
+
 function filterCategoryItemsByTags(categoryName, categoriesData) {
-  const selectedTags = selectedCategories; // Seçilen etiketler
-  const container = document.getElementById(categoryName);
+  const selectedTags = selectedCategories; // Seçilen etiketler 
+  const container = document.getElementById(categoryName); 
 
-  if (!container) return;
+  if (!container) return; 
 
-  const items = container.querySelectorAll(".focus-item");
+  const items = container.querySelectorAll(".focus-item"); 
 
-  items.forEach((item) => {
-    const itemTags = item
-      .getAttribute("data-tag")
-      .split(",")
-      .map((t) => t.trim());
-    const category = categoriesData[categoryName];
-    if (category.priceFormat === "veranda") {
-      if (itemTags.includes(kontiHeight.toString())) {
-        item.style.display = "block";
-      } else {
-        item.style.display = "none";
+  items.forEach((item) => { 
+      const dataTag = item.getAttribute("data-tag");
+      if (!dataTag) {
+          console.error(`data-tag is undefined for item: ${item}`);
+          item.style.display = "none"; // Hata durumunda gizle
+          return; // Hata durumunda işlemi durdur
       }
-    } else {
-      // Seçilen etiketler ile ürün etiketleri arasında bir eşleşme kontrolü
-      const hasMatchingTag =
-        selectedTags.length === 0 ||
-        itemTags.some((tag) => selectedTags.includes(tag));
+      
+      const itemTags = dataTag.split(",").map((t) => t.trim()); 
+      const category = categoriesData[categoryName]; 
+      
+      if (category.priceFormat === "veranda") { 
+          const stringKontiHeight = kontiHeight.toString();
+          // Kontrol: kontiHeight değeri itemTags içinde mi?
+          if (itemTags.includes(stringKontiHeight)) { 
+              item.style.display = "block"; // Eğer eşleşiyorsa göster
+          } else { 
+              item.style.display = "none"; // Eşleşmiyorsa gizle
+          } 
+        
+      
+      } else { 
+          const hasMatchingTag = 
+              selectedTags.length === 0 || 
+              itemTags.some((tag) => selectedTags.includes(tag)); 
 
-      // Eğer eşleşme varsa, ürünü görünür yap
-      item.style.display = hasMatchingTag ? "grid" : "none";
-    }
-  });
+          // Eğer eşleşme varsa, ürünü görünür yap 
+          item.style.display = hasMatchingTag ? "grid" : "none"; 
+      } 
+  }); 
 }
 function filterSidebarItemsByTags() {
   const hasSelectedTags = selectedCategories.length > 0;
@@ -1567,12 +1587,13 @@ function filterSidebarItemsByTags() {
 
     if (category) {
       const categoryTags = category.catTag || [];
+      const isParentCategory = !category.parentCategory;
       const matchesTags = categoryTags.some((tag) =>
         selectedCategories.includes(tag)
       );
 
       // Eğer seçilen etiket yoksa veya etiket eşleşmiyorsa butonu gizle
-      item.style.display = hasSelectedTags && !matchesTags ? "none" : "block";
+      item.style.display = hasSelectedTags && isParentCategory  && !matchesTags ? "none" : "block";
     }
   });
 }
@@ -1882,4 +1903,9 @@ function showDetails(item) {
   };
 }
 // Initialize categories on page load
-document.addEventListener("DOMContentLoaded", initializeCategories);
+document.addEventListener("DOMContentLoaded", function(){
+  initializeCategories();
+ 
+  
+});
+
