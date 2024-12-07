@@ -1277,17 +1277,16 @@ function updateAllPrices(mainCategory) {
         // }
         break;
       case "tasDuvar":
-   
-        const alanFiyat =
-          parseFloat(item.button.getAttribute("data-alan-price")) || 0;
-        const cevreFiyat =
-          parseFloat(item.button.getAttribute("data-price")) || 0;
-        const cevre = (kontiHeight + kontiWidth) * 2;
-        const alan = kontiWidth* kontiHeight;
-
+        const tasWidth = categoryTotals[mainCategory].width; // Bu değerlerin doğru alındığını kontrol edin
+        const tasHeight = categoryTotals[mainCategory].height;
+        const alanFiyat = parseFloat(item.button.getAttribute("data-alan-price")) || 0;
+        const cevreFiyat = parseFloat(item.button.getAttribute("data-price")) || 0;
+        const cevre = (tasHeight + tasWidth) * 2;
+        const alan = tasWidth* tasHeight;
         // Yeni fiyat hesaplama yöntemi
         calculatedPrice = (alan * alanFiyat) + (cevre * cevreFiyat);
-      
+      break;
+
       case "veranda":
         calculatedPrice = item.basePrice;
         break;
@@ -1377,7 +1376,8 @@ function calculatePrice(item, category, mainCategory) {
         // }
       }
       case "tasDuvar":
-        calculatedPrice = (((kontiHeight + kontiWidth)*2)*item.price)((kontiHeight * kontiWidth)* item.alanPrice)
+        const alanfiyat = parseFloat(item())
+        calculatedPrice = (((kontiHeight + kontiWidth)*2)*item.price)+((kontiHeight * kontiWidth)* item.alanPrice)
         break;
     case "onYuzey":
       calculatedPrice = item.price * kontiHeight;
